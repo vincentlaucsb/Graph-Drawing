@@ -1,0 +1,3 @@
+[submodule "lib/svg"]
+	path = lib/svg
+	url = https://github.com/vincentlaucsb/svg.git

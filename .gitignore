@@ -1,3 +1,9 @@
+# Trash
+tutorials/
+
+# Visual Studio
+*.ipch
+
 # Compiled Object files
 *.slo
 *.lo

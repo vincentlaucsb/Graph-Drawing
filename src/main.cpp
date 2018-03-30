@@ -6,7 +6,8 @@
 #include "graphs.h"
 
 // Helpers for spring force directed layout
-Point calculate_force(ForceDirectedParams& params, TNEANet& graph, TNEANet::TNodeI& node);
+Point calculate_force(ForceDirectedParams& params, TNEANet& graph, TNEANet::TNodeI& node,
+    std::map<int, VertexSet>& adjacent);
 double distance_between(TNEANet& graph, int id1, int id2);
 double distance_between(TNEANet::TNodeI& v1, TNEANet::TNodeI& v2);
 
@@ -23,22 +24,22 @@ void random_layout(TNEANet& graph) {
     }
 }
 
-double distance_between(TNEANet& graph, int id1, int id2) {
+inline double distance_between(TNEANet& graph, int id1, int id2) {
     return distance_between(graph.GetNI(id1), graph.GetNI(id2));
 }
 
-double distance_between(TNEANet::TNodeI& node1, TNEANet::TNodeI& node2) {
+inline double distance_between(TNEANet::TNodeI& node1, TNEANet::TNodeI& node2) {
     return sqrt(
         pow(get_xy(node1).first - get_xy(node2).first, 2) + 
         pow(get_xy(node1).second - get_xy(node2).second, 2)
     );
 }
 
-Point get_xy(TNEANet& graph, int id) {
+inline Point get_xy(TNEANet& graph, int id) {
     return get_xy(graph.GetNI(id));
 }
 
-Point get_xy(TNEANet::TNodeI node) {
+inline Point get_xy(TNEANet::TNodeI node) {
     TVec<TStr> attr_names;
     TVec<TFlt> attr_vals;
     node.GetFltAttrNames(attr_names);
@@ -50,23 +51,21 @@ Point get_xy(TNEANet::TNodeI node) {
     return Point(x, y);
 }
 
-Point calculate_force(ForceDirectedParams& params, TNEANet& graph, TNEANet::TNodeI& node) {
+inline Point calculate_force(ForceDirectedParams& params, TNEANet& graph, TNEANet::TNodeI& node,
+    std::map<int, VertexSet>& adjacent) {
     // Calculate the force on one node
     double sum_x = 0, sum_y = 0;
     double& luv = params.luv, kuv1 = params.kuv1, kuv2 = params.kuv2;
 
-    // Iterate over incident edges
-    for (auto edge : incident_edges(node.GetId(), graph)) {
-        int dest_id = (edge.GetDstNId() != node.GetId()) ? edge.GetDstNId() : edge.GetSrcNId();
-        if (dest_id != node.GetId()) { // Avoid loops
-            sum_x += kuv1 * (distance_between(graph, dest_id, node.GetId()) - luv) *
-                (get_xy(node).first - get_xy(graph, dest_id).first) /
-                (distance_between(graph, dest_id, node.GetId()));
+    // Iterate over adjacent vertices
+    for (auto adj: adjacent[node.GetId()]) {
+        sum_x += kuv1 * (distance_between(graph, adj, node.GetId()) - luv) *
+            (get_xy(node).first - get_xy(graph, adj).first) /
+            (distance_between(graph, adj, node.GetId()));
 
-            sum_y += kuv1 * (distance_between(graph, dest_id, node.GetId()) - luv) *
-                (get_xy(node).second - get_xy(graph, dest_id).second) /
-                (distance_between(graph, dest_id, node.GetId()));
-        }
+        sum_y += kuv1 * (distance_between(graph, adj, node.GetId()) - luv) *
+            (get_xy(node).second - get_xy(graph, adj).second) /
+            (distance_between(graph, adj, node.GetId()));
     }
 
     // Iterate over vertices X vertices
@@ -116,19 +115,20 @@ void force_directed_layout(ForceDirectedParams& params, TNEANet& graph) {
     // Layout points randomly
     random_layout(graph);
     std::map<TNEANet::TNodeI, Point> forces;
+    std::map<int, VertexSet> adjacent = adjacency_list(graph); // Optimization
 
     bool move = true;
     while (move) {
         for (auto node = graph.BegNI(); node < graph.EndNI(); node++) {
             auto coord = get_xy(node);
-            auto force = calculate_force(params, graph, node);
+            auto force = calculate_force(params, graph, node, adjacent);
             forces[node] = force;
         }
 
         // Keep moving as long as forces not zero
         move = false;
         for (auto force : forces) {
-            if (APPROX_EQUALS(sqrt(pow(force.second.first, 2) - pow(force.second.second, 2)), 0, 5))
+            if (!APPROX_EQUALS(sqrt(pow(force.second.first, 2) - pow(force.second.second, 2)), 0, 5))
                 move = true;
         }
 
@@ -137,6 +137,7 @@ void force_directed_layout(ForceDirectedParams& params, TNEANet& graph) {
             // ... in the direction of the force by a distance proportional to the magnitude of the force
             //double pct = 1/sqrt(pow(force.second.first, 2) + pow(force.second.second, 2));
             double pct = 0.1;
+            if (isnan(force.second.first)) throw std::runtime_error("Failed to converge");
             graph.AddFltAttrDatN(force.first,
                 get_xy(force.first).first - pct * force.second.first, "x");
             graph.AddFltAttrDatN(force.first,
@@ -227,31 +228,42 @@ void barycenter_layout(TNEANet& graph, const size_t fixed_vertices) {
 }
 
 int main() {
-    // Complete Graph
-    // auto graph = complete(25);
+    // Complete Graph (K5, K7, K8 is good with springs)
+    // auto graph = complete(20);
 
     // auto graph = petersen();
 
     // Cycle
-    // auto graph = cycle(20);
+    // auto graph = cycle(40);
 
-    auto graph = hypercube(), pgraph = petersen();
+    auto pris_g = prism(50);
+    auto pgraph = petersen();
+
+    // Good complete graph settings
+    // ForceDirectedParams params = { 400, 2, 1 };
     
     // Note algorithm converges more quickly if
     // natural spring length is reasonably large
-    // ForceDirectedParams params = { 200, 1, 1 };
-    // force_directed_layout(params, graph);
+    try {
+        auto& graph = pris_g;
+        ForceDirectedParams params = { 200, 2, 1 };
+        force_directed_layout(params, graph);
+        auto force_dir_draw = draw_graph(graph);
+        force_dir_draw.autoscale();
+        std::ofstream graph_out("graph.svg");
+        graph_out << std::string(force_dir_draw);
+    }
+    catch (std::runtime_error& err) {
+        std::cout << err.what() << std::endl;
+    }
     
-    barycenter_layout(graph, 4);
+    // barycenter_layout(kmn, 3);
     barycenter_layout(pgraph, 5);
 
-    std::ofstream graph_out("graph.svg"), petersen_out("petersen.svg");
-    auto force_dir_draw = draw_graph(graph);
+    std::ofstream petersen_out("petersen.svg");
     auto petersen_draw = draw_graph(pgraph);
-    force_dir_draw.autoscale();
     petersen_draw.autoscale();
 
-    graph_out << std::string(force_dir_draw);
     petersen_out << std::string(petersen_draw);
     return 0;
 }

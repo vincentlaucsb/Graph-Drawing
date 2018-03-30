@@ -13,6 +13,26 @@ TNEANet cycle(int nodes) {
     return graph;
 }
 
+TNEANet ladder(int rungs) {
+    // Ref: http://mathworld.wolfram.com/LadderGraph.html
+    TNEANet graph;
+    graph.AddNode(0);
+    graph.AddNode(1);
+    graph.AddEdge(0, 1);
+
+    for (int i = 1; i < rungs; i++) {
+        graph.AddNode(2 * i);
+        graph.AddNode((2 * i) + 1);
+        graph.AddEdge(2 * i, (2 * i) + 1);
+
+        // Connect to previous rung
+        graph.AddEdge(2 * i, (2 * i) - 2);
+        graph.AddEdge((2 * i) + 1, (2 * i) - 1);
+    }
+
+    return graph;
+}
+
 TNEANet complete(int nodes) {
     TNEANet graph;
     for (int i = 0; i < nodes; i++)
@@ -21,6 +41,20 @@ TNEANet complete(int nodes) {
     for (int i = 0; i < nodes; i++) {
         for (int j = 0; j < nodes; j++)
             if (i != j) graph.AddEdge(i, j);
+    }
+
+    return graph;
+}
+
+TNEANet complete_bipartite(int m, int n) {
+    TNEANet graph;
+    for (int i = 0; i < m + n; i++) graph.AddNode(i);
+
+    for (int i = 0; i < m; i++) { // Iterate over left side
+        // Add edges to right
+        for (int j = m; j < m + n; j++) {
+            graph.AddEdge(i, j);
+        }
     }
 
     return graph;
@@ -95,6 +129,31 @@ TNEANet wheel(int n) {
     // Spokes
     for (int i = 0; i < n; i++)
         graph.AddEdge(i, n);
+
+    return graph;
+}
+
+TNEANet prism(int n) {
+    TNEANet graph;
+    
+    // Perimeter: 0 ... n - 1, Inner: n ... 2n - 1
+    for (int i = 0; i < 2 * n; i++)
+        graph.AddNode(i);
+    
+    // Perimeter edges
+    for (int i = 0; i + 1 < n; i++)
+        graph.AddEdge(i, i + 1);
+    graph.AddEdge(n - 1, 0); // Complete cycle
+
+    // Inner edges
+    for (int i = n; i + 1 < 2 * n; i++)
+        graph.AddEdge(i, i + 1);
+    graph.AddEdge(2*n - 1, n); // Complete cycle
+
+    // Spokes
+    for (int i = 0; i < n; i++) {
+        graph.AddEdge(i, i + n);
+    }
 
     return graph;
 }

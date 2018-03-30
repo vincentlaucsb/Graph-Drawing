@@ -2,6 +2,8 @@
   "ExpandedNodes": [
     "",
     "\\lib",
+    "\\lib\\svg",
+    "\\lib\\svg\\src",
     "\\src"
   ],
   "SelectedNode": "\\CMakeLists.txt",

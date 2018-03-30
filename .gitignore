@@ -3,6 +3,7 @@ tutorials/
 
 # Visual Studio
 *.ipch
+.vs/
 
 # Compiled Object files
 *.slo

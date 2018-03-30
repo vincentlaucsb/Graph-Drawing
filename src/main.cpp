@@ -1,18 +1,14 @@
 #include <math.h>
 #include <random>
 #include <vector>
+#include <set>
 #include <fstream>
-#include "force_directed.h"
+#include "graphs.h"
 
-// Helpers for force directed layout
-std::pair<double, double> calculate_force(ForceDirectedParams& params, TNEANet& graph, TNEANet::TNodeI& node);
+// Helpers for spring force directed layout
+Point calculate_force(ForceDirectedParams& params, TNEANet& graph, TNEANet::TNodeI& node);
 double distance_between(TNEANet& graph, int id1, int id2);
 double distance_between(TNEANet::TNodeI& v1, TNEANet::TNodeI& v2);
-std::vector<TNEANet::TEdgeI> incident_edges(int id, TNEANet& graph);
-
-bool is_zero(double num) {
-    if (abs(num) < 10) return true;
-}
 
 void random_layout(TNEANet& graph) {
     std::default_random_engine generator;
@@ -38,11 +34,11 @@ double distance_between(TNEANet::TNodeI& node1, TNEANet::TNodeI& node2) {
     );
 }
 
-std::pair<double, double> get_xy(TNEANet& graph, int id) {
+Point get_xy(TNEANet& graph, int id) {
     return get_xy(graph.GetNI(id));
 }
 
-std::pair<double, double> get_xy(TNEANet::TNodeI node) {
+Point get_xy(TNEANet::TNodeI node) {
     TVec<TStr> attr_names;
     TVec<TFlt> attr_vals;
     node.GetFltAttrNames(attr_names);
@@ -51,10 +47,10 @@ std::pair<double, double> get_xy(TNEANet::TNodeI node) {
     float x = attr_vals[attr_names.SearchForw("x")],
         y = attr_vals[attr_names.SearchForw("y")];
 
-    return std::pair<double, double>(x, y);
+    return Point(x, y);
 }
 
-std::pair<double, double> calculate_force(ForceDirectedParams& params, TNEANet& graph, TNEANet::TNodeI& node) {
+Point calculate_force(ForceDirectedParams& params, TNEANet& graph, TNEANet::TNodeI& node) {
     // Calculate the force on one node
     double sum_x = 0, sum_y = 0;
     double& luv = params.luv, kuv1 = params.kuv1, kuv2 = params.kuv2;
@@ -87,20 +83,41 @@ std::pair<double, double> calculate_force(ForceDirectedParams& params, TNEANet& 
     return std::make_pair(sum_x, sum_y);
 }
 
-std::vector<TNEANet::TEdgeI> incident_edges(int id, TNEANet& graph) {
-    std::vector<TNEANet::TEdgeI> edges;
+EdgeSet incident_edges(int id, const TNEANet& graph) {
+    /** Compute all edges incident to a vertex */
+    EdgeSet edges;
     for (auto edge = graph.BegEI(); edge < graph.EndEI(); edge++)
-        if (edge.GetDstNId() == id || edge.GetSrcNId() == id) edges.push_back(edge);
-
+        if (edge.GetDstNId() == id || edge.GetSrcNId() == id) edges.insert(edge);
     return edges;
+}
+
+VertexSet adjacent_vertices(int id, const TNEANet& graph) {
+    /** Compute all vertices adjacent to vertex with given id by iterating
+     *  through edge set
+     */
+    VertexSet ret;
+    auto edges = incident_edges(id, graph);
+    for (auto edge : edges) {
+        if (edge.GetDstNId() == id) ret.insert(edge.GetSrcNId());
+        else if (edge.GetSrcNId() == id) ret.insert(edge.GetDstNId());
+    }
+    return ret;
+}
+
+std::map<int, VertexSet> adjacency_list(const TNEANet& graph) {
+    /** Compute a graph's adjacency list */
+    std::map<int, VertexSet> ret;
+    for (auto node = graph.BegNI(); node < graph.EndNI(); node++)
+        ret[node.GetId()] = adjacent_vertices(node.GetId(), graph);
+    return ret;
 }
 
 void force_directed_layout(ForceDirectedParams& params, TNEANet& graph) {
     // Layout points randomly
     random_layout(graph);
-    std::map<TNEANet::TNodeI, std::pair<double, double>> forces;
-    bool move = true;
+    std::map<TNEANet::TNodeI, Point> forces;
 
+    bool move = true;
     while (move) {
         for (auto node = graph.BegNI(); node < graph.EndNI(); node++) {
             auto coord = get_xy(node);
@@ -111,29 +128,20 @@ void force_directed_layout(ForceDirectedParams& params, TNEANet& graph) {
         // Keep moving as long as forces not zero
         move = false;
         for (auto force : forces) {
-            std::cout << "Force: " << force.second.first << " " << 
-                force.second.second << std::endl;
-            if (!is_zero(sqrt(pow(force.second.first, 2) - pow(force.second.second, 2))))
+            if (APPROX_EQUALS(sqrt(pow(force.second.first, 2) - pow(force.second.second, 2)), 0, 5))
                 move = true;
         }
-
-        std::cout << std::endl;
 
         // Move nodes...
         for (auto force : forces) {
             // ... in the direction of the force by a distance proportional to the magnitude of the force
-            double pct = 1/sqrt(pow(force.second.first, 2) + pow(force.second.second, 2));
+            //double pct = 1/sqrt(pow(force.second.first, 2) + pow(force.second.second, 2));
+            double pct = 0.1;
             graph.AddFltAttrDatN(force.first,
                 get_xy(force.first).first - pct * force.second.first, "x");
             graph.AddFltAttrDatN(force.first,
                 get_xy(force.first).second - pct * force.second.second, "y");
         }
-        
-        // Print out node locations
-        for (auto node = graph.BegNI(); node < graph.EndNI(); node++)
-            std::cout << get_xy(node).first << " " << get_xy(node).second << std::endl;
-
-        std::cout << std::endl;
     }
 }
 
@@ -148,8 +156,7 @@ SVG::SVG draw_graph(TNEANet& graph) {
 
     for (auto node = graph.BegNI(); node < graph.EndNI(); node++) {
         auto coord = get_xy(node);
-        nodes[node.GetId()] = vertices->add_child<SVG::Circle>(
-            coord.first, coord.second, circle_radius);
+        nodes[node.GetId()] = vertices->add_child<SVG::Circle>(coord, circle_radius);
     };
 
     for (auto edge = graph.BegEI(); edge < graph.EndEI(); edge++) {
@@ -164,52 +171,87 @@ SVG::SVG draw_graph(TNEANet& graph) {
     return root;
 }   
 
+// Helpers for Barycenter Draw
+void barycenter_layout(TNEANet& graph, const size_t fixed_vertices) {
+    using namespace SVG;
+    std::set<TNEANet::TNodeI> fixed, free;
+    std::vector<Point> polygon = util::polar_points((int)fixed_vertices, 0, 0, 250);
+
+    auto node = graph.BegNI();
+    auto point = polygon.begin();
+    for (; (node < graph.EndNI()) && (fixed.size() < fixed_vertices); node++) {
+        fixed.insert(node);
+
+        // Place along polygon
+        graph.AddFltAttrDatN(node, point->first, "x");
+        graph.AddFltAttrDatN(node, point->second, "y");
+        point++;
+    }
+
+    for (; node < graph.EndNI(); node++) {
+        free.insert(node);
+
+        // Place free vertices at origin
+        graph.AddFltAttrDatN(node, 0, "x");
+        graph.AddFltAttrDatN(node, 0, "y");
+    }
+
+    // Optimization: Keep a list of adjacent vertices
+    std::map<int, VertexSet> adjacent = adjacency_list(graph);
+
+    bool converge;
+    do {
+        converge = true;
+        for (auto node: free) {
+            auto current_xy = get_xy(node);
+            double sum_x = 0, sum_y = 0, new_x, new_y;
+
+            // Sum up adjacent vertices
+            for (auto u : adjacent[node.GetId()]) {
+                auto u_xy = get_xy(graph.GetNI(u));
+                sum_x += u_xy.first;
+                sum_y += u_xy.second;
+                // std::cout << "u_xy.first " << u_xy.first << " u_xy.second " << u_xy.second << std::endl;
+            }
+
+            new_x = (1 / (double)node.GetDeg()) * sum_x;
+            new_y = (1 / (double)node.GetDeg()) * sum_y;
+            graph.AddFltAttrDatN(node, new_x, "x");
+            graph.AddFltAttrDatN(node, new_y, "y");
+
+            // Convergence test
+            if (!(APPROX_EQUALS(new_x, current_xy.first, 0.01) && APPROX_EQUALS(new_y, current_xy.second, 0.01)))
+                converge = false;
+        }
+    } while (!converge);
+}
+
 int main() {
-    /* Complete Graph
-    TNEANet graph;
-    int num_nodes = 10;
-    for (int i = 0; i < num_nodes; i++)
-        graph.AddNode(i);
+    // Complete Graph
+    // auto graph = complete(25);
 
-    for (int i = 0; i < num_nodes; i++) {
-        for (int j = 0; j < num_nodes; j++)
-            if (i != j) graph.AddEdge(i, j);
-    }
-    */
+    // auto graph = petersen();
 
-    // Wheel
-    TNEANet graph;
-    int num_nodes = 6;
-    for (int i = 0; i <= num_nodes; i++)
-        graph.AddNode(i);
+    // Cycle
+    // auto graph = cycle(20);
 
-    // Perimeter of wheel
-    for (int i = 0; i < num_nodes; i++) {
-        if (i + 1 == num_nodes) {
-            graph.AddEdge(i, 0);
-            std::cout << "Added an edge from " << i << " to " << 0 << std::endl;
-        }
-        else {
-            graph.AddEdge(i, i + 1);
-            std::cout << "Added an edge from " << i << " to " << i + 1<< std::endl;
-        }
-    }
-
-    // Spokes
-    for (int i = 0; i < num_nodes; i++)
-        graph.AddEdge(i, num_nodes);
-
-    // random_layout(graph);
+    auto graph = hypercube(), pgraph = petersen();
     
     // Note algorithm converges more quickly if
     // natural spring length is reasonably large
-    ForceDirectedParams params = { 400, 40, 40 };
-    force_directed_layout(params, graph);
+    // ForceDirectedParams params = { 200, 1, 1 };
+    // force_directed_layout(params, graph);
+    
+    barycenter_layout(graph, 4);
+    barycenter_layout(pgraph, 5);
 
-    std::ofstream graph_out("graph.svg");
+    std::ofstream graph_out("graph.svg"), petersen_out("petersen.svg");
     auto force_dir_draw = draw_graph(graph);
+    auto petersen_draw = draw_graph(pgraph);
     force_dir_draw.autoscale();
+    petersen_draw.autoscale();
 
     graph_out << std::string(force_dir_draw);
+    petersen_out << std::string(petersen_draw);
     return 0;
 }

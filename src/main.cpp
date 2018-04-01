@@ -111,7 +111,10 @@ std::map<int, VertexSet> adjacency_list(const TNEANet& graph) {
     return ret;
 }
 
-void force_directed_layout(ForceDirectedParams& params, TNEANet& graph) {
+std::vector<SVG::SVG> force_directed_layout(ForceDirectedParams& params, TNEANet& graph) {
+    // Use Eades' spring layout algorithm, creating a frame between each iteration
+    std::vector<SVG::SVG> ret;
+
     // Layout points randomly
     random_layout(graph);
     std::map<TNEANet::TNodeI, Point> forces;
@@ -143,7 +146,12 @@ void force_directed_layout(ForceDirectedParams& params, TNEANet& graph) {
             graph.AddFltAttrDatN(force.first,
                 get_xy(force.first).second - pct * force.second.second, "y");
         }
+
+        // Add frame
+        ret.push_back(draw_graph(graph));
     }
+
+    return ret;
 }
 
 SVG::SVG draw_graph(TNEANet& graph) {
@@ -245,13 +253,12 @@ int main() {
     // Note algorithm converges more quickly if
     // natural spring length is reasonably large
     try {
-        auto& graph = pris_g;
-        ForceDirectedParams params = { 200, 2, 1 };
-        force_directed_layout(params, graph);
-        auto force_dir_draw = draw_graph(graph);
-        force_dir_draw.autoscale();
+        auto graph = complete(9);
+        ForceDirectedParams params = { 400, 2, 1 };
+        std::vector<SVG::SVG> frames = force_directed_layout(params, graph);
+        auto final_svg = SVG::frame_animate(frames, 5);
         std::ofstream graph_out("graph.svg");
-        graph_out << std::string(force_dir_draw);
+        graph_out << std::string(final_svg);
     }
     catch (std::runtime_error& err) {
         std::cout << err.what() << std::endl;
@@ -261,9 +268,9 @@ int main() {
     barycenter_layout(pgraph, 5);
 
     std::ofstream petersen_out("petersen.svg");
-    auto petersen_draw = draw_graph(pgraph);
-    petersen_draw.autoscale();
+    // auto petersen_draw = draw_graph(pgraph);
+    // petersen_draw.autoscale();
 
-    petersen_out << std::string(petersen_draw);
+    // petersen_out << std::string(petersen_draw);
     return 0;
 }

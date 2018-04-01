@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.9)
+set(CMAKE_CXX_STANDARD 14)
 project(Force_Directed_Drawing)
-set(SOURCES src/graphs.cpp)
+include_directories(
+	${CMAKE_SOURCE_DIR}/lib/svg/src/
+	${CMAKE_SOURCE_DIR}/lib/cxxopts/include/
+	${CMAKE_SOURCE_DIR}/src/
+)
 
 if(CMAKE_HOST_UNIX)
     if(CONFIG STREQUAL "Debug")
@@ -12,19 +17,26 @@ if(CMAKE_HOST_UNIX)
 endif()
 
 ## lib
-add_library(snap lib/snap-core/Snap.cpp)
-target_include_directories(snap PUBLIC 
-	lib/glib-core/
-	lib/snap-adv/
-	lib/snap-core/
+add_library(snap ${CMAKE_SOURCE_DIR}/lib/snap-core/Snap.cpp)
+target_include_directories(snap PUBLIC
+	${CMAKE_SOURCE_DIR}/lib/glib-core/
+	${CMAKE_SOURCE_DIR}/lib/snap-adv/
+	${CMAKE_SOURCE_DIR}/lib/snap-core/
 )
 
+add_library(force_directed
+    ${CMAKE_SOURCE_DIR}/src/force_directed.h
+	${CMAKE_SOURCE_DIR}/src/layout.cpp
+	${CMAKE_SOURCE_DIR}/src/graphs.cpp
+)
+target_link_libraries(force_directed snap)
+
 ## executables
-include_directories(${CMAKE_SOURCE_DIR}/lib/svg/src/)
-include_directories(${CMAKE_SOURCE_DIR}/src/)
-
 add_executable(example src/demo-TNEANet.cpp)
-target_link_libraries(example snap)
+target_link_libraries(example snap force_directed)
 
-add_executable(draw src/graphs.cpp src/main.cpp)
-target_link_libraries(draw snap)
+add_executable(animate_spring src/animate_spring.cpp)
+target_link_libraries(animate_spring snap force_directed)
+
+add_executable(animate_tutte src/animate_barycenter.cpp)
+target_link_libraries(animate_tutte snap force_directed)

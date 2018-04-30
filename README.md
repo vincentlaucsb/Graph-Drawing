@@ -8,11 +8,11 @@ This algorithm visualizes nodes as rings hooked onto steel springs (edges). In a
 vertices, so that they don't completely overlap.
 
 ### Algorithm Trace of Eades' Algorithm for K9
-<img width="500px" src="https://raw.githubusercontent.com/vincentlaucsb/Force-Directed-Drawing/master/k9_spring.svg?sanitize=true" />
+<img width="500px" src="https://raw.githubusercontent.com/vincentlaucsb/Force-Directed-Drawing/master/k9.svg?sanitize=true" />
 
 ### Other Complete Graphs
-<img width="500px" src="https://raw.githubusercontent.com/vincentlaucsb/Force-Directed-Drawing/master/k4_spring.svg?sanitize=true" />
-<img width="500px" src="https://raw.githubusercontent.com/vincentlaucsb/Force-Directed-Drawing/master/k5_spring.svg?sanitize=true" />
+<img width="500px" src="https://raw.githubusercontent.com/vincentlaucsb/Force-Directed-Drawing/master/k4.svg?sanitize=true" />
+<img width="500px" src="https://raw.githubusercontent.com/vincentlaucsb/Force-Directed-Drawing/master/k5.svg?sanitize=true" />
 
 ## Tuttes' Barycenter Algorithm
 In this classic force directed algorithm, a strictly convex polygon is drawn on the exterior, with some nodes nailed down onto the

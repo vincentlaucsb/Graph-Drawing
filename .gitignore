@@ -1,3 +1,9 @@
+# TeX
+*.aux
+*.log
+*.synctex.gz
+*.toc
+
 # Trash
 tutorials/
 

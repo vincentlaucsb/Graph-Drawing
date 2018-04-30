@@ -175,10 +175,10 @@ namespace force_directed {
         return root;
     }
 
-    std::vector<SVG::SVG> barycenter_layout(TNEANet& graph, const size_t fixed_vertices) {
+    std::vector<SVG::SVG> barycenter_layout(TNEANet& graph, const size_t fixed_vertices, const double width) {
         std::vector<SVG::SVG> ret;
         std::set<TNEANet::TNodeI> fixed, free;
-        std::vector<Point> polygon = SVG::util::polar_points((int)fixed_vertices, 0, 0, 250);
+        std::vector<Point> polygon = SVG::util::polar_points((int)fixed_vertices, 0, 0, width/2);
 
         auto node = graph.BegNI();
         auto point = polygon.begin();

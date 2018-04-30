@@ -24,7 +24,7 @@ namespace force_directed {
     SVG::SVG draw_graph(TNEANet& graph);
     void random_layout(TNEANet& graph);
     std::vector<SVG::SVG> force_directed_layout(ForceDirectedParams& params, TNEANet& graph);
-    std::vector<SVG::SVG> barycenter_layout(TNEANet& graph, const size_t fixed_vertices = 5);
+    std::vector<SVG::SVG> barycenter_layout(TNEANet& graph, const size_t fixed_vertices = 5, const double width = 500);
 
     // Helpers
     using EdgeSet = std::set<TNEANet::TEdgeI>;
@@ -33,6 +33,7 @@ namespace force_directed {
     EdgeSet incident_edges(int id, const TNEANet& graph);
     VertexSet adjacent_vertices(int id, const TNEANet& graph);
     std::map<int, VertexSet> adjacency_list(const TNEANet& graph);
+    void prism_distances(int min = 3, int max = 10);
 
     // Functions for creating graphs
     TNEANet cycle(int nodes);
@@ -43,4 +44,5 @@ namespace force_directed {
     TNEANet ladder(int);
     TNEANet petersen();
     TNEANet hypercube();
+    TNEANet test();
 }

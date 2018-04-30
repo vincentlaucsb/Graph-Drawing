@@ -1,0 +1,122 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1.25in]{geometry}
+\usepackage{graphicx,float}
+\usepackage{amsmath,amsthm}
+\usepackage{subcaption} % For side-by-side figures
+
+% For labelings/struct descriptions
+\usepackage{blindtext}
+\usepackage{scrextend}
+\addtokomafont{labelinglabel}{\sffamily}
+
+\usepackage{listings} % For source code
+\usepackage{algorithm,algorithmicx,algpseudocode} % For algorithms
+
+%opening
+\title{Force Directed Drawing}
+\author{Vincent La}
+
+\begin{document}
+
+% \tableofcontents
+\maketitle
+
+\section{Introduction}
+
+
+\section{Tutte's Barycenter Method}
+An early force directed drawing method was Tutte's Barycenter Method. In this method, the force on every vertex is given by 
+
+\[ F(v) = \sum_{(u, v) \in E} (p_u - p_v) \]
+
+Hence, we can ...
+
+\[
+\begin{aligned}
+    \sum_{(u, v) \in E} (x_u - x_v) &= 0 \\
+    \sum_{(u, v) \in E} (y_u - y_v) &= 0 \\
+\end{aligned}
+\]
+
+Which we may rewrite as
+
+\[
+\begin{aligned}
+    \deg{(v)}x_v - \sum_{u \in N_1(v)} x_u &= \sum_{w \in N_0(v)} x^*_w \\
+    \deg{(v)}y_v - \sum_{u \in N_1(v)} y_u &= \sum_{w \in N_0(v)} y^*_w
+\end{aligned}
+\]
+
+These equations are linear, and the resulting matrix is diagonally dominant (see Example 1.1). This is because the diagonal consists of vertex degrees, while the other entries $a_{ij}$ are either -1's (if $x_i$ and $x_j$ are neighbors) or 0's if they aren't.
+
+\subsection{Example: Hypercube}
+A simple example for which Tutte's method gives aesthetically pleasing results is the hypercube.
+
+\bigskip
+
+In the image below (insert image later), the hypercube is placed in 500 x 500 pixel grid. The grid is governed by a simple Cartesian coordinate system, where the top left and bottom right corners have coordinates $(-250, 0)$ and $(250, 250)$ respectively. Four vertices are fixed and laid out into a circle of radius 250 centered at the origin. Hence, the bulk of the work performed algorithm is done in placing the center four free vertices. Labeling the free vertices as $x_1, x_2, x_3, x_4$, we may represent the task of laying out the free vertices with this matrix
+
+\[
+\begin{bmatrix}
+    3 & -1 & 0 & -1 \\
+    -1 & 3 & -1 & 0 \\
+    0 & -1 & 3 & -1 \\
+    -1 & 0 & -1 & 3 \\
+\end{bmatrix}
+\begin{bmatrix} x_1 \\ x_2 \\ x_3 \\ x_4 \end{bmatrix} =
+\begin{bmatrix} 0 \\ 250 \\ 0 \\ -250 \end{bmatrix}
+\]
+
+The solution to this matrix is given by $x_1 = x_3 = 0, x_2 = \frac{250}{3}, x_4 = -\frac{250}{3}$.
+
+\subsection{Resolution}
+One the the main drawbacks of this algorithm is potentially poor resolution. This is demonstrated best by the prism graph.
+
+\paragraph{Theorem} For any pair of adjacent "free" vertices in the prism graph drawn in the unit square, the distance between them is $O(\frac{1}{n})$.
+
+\begin{proof}
+    Let $P_n$ be the prism graph on $n$ vertices and show that the distance between any two vertices is $O(n)$ by showing that $\text{dist(}{p_i, p_{i+1})} \leq a \cdot \frac{1}{n}$. Let $a \geq \frac{2\sqrt{2}}{n}$.
+    
+    \bigskip
+    
+    First, for any $p_i$ we have
+    \[
+        p_i = \left(
+            \frac{x_{i-1} + x_{i+1} + f_{ix}}{n} , % x
+            \frac{y_{i-1} + y_{i+1} + f_{iy}}{n} % y
+        \right)
+    \]
+    
+    and by extension
+    \[
+        p_{i + 1} = \left(
+        \frac{x_i + x_{i+2} + f_{i + 1x}}{n} , % x
+        \frac{y_i + y_{i+2} + f_{i + 1y}}{n} % y
+        \right)
+    \]
+    
+    Thus,
+    \[\begin{aligned}
+    &  \text{dist(}{p_i, p_{i + 1}}) \\
+    &= \sqrt{
+        \left(\frac{x_i + x_{i+2} + f_{i+1} - x_{i-1} - x_{i+1} - f_i}{n}\right)^2 +
+        \left(\frac{y_i + y_{i+2} + f_{i+1} - y_{i-1} - y_{i+1} - f_i}{n}\right)^2
+    } \\
+    &= \sqrt{
+        \left(\frac{x_{i+2} + f_{i+1}}{n}\right)^2 +
+        \left(\frac{y_{i+2} + f_{i+1}}{n}\right)^2
+        } \\
+    &= \sqrt{
+        \left(\frac{2}{n}\right)^2 +
+        \left(\frac{2}{n}\right)^2
+    } 
+    &\text{Because $P$ is drawn within unit square}
+    &= \sqrt{\frac{4}{n^2} + \frac{4}{n^2}} \\
+    &= \sqrt{\frac{8}{n^2}} \\
+    &= 2\sqrt{2}\sqrt{\frac{1}{n^2}} \\
+    &= \frac{2\sqrt{2}}{n} \leq a \cdot \frac{1}{n}
+    \end{aligned}\]
+    as desired.    
+\end{proof}
+
+\end{document}

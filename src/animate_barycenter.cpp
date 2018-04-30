@@ -40,6 +40,8 @@ int main(int argc, char** argv) {
         vertices = n;
     }
 
+    prism_distances(3, 30);
+
     std::vector<SVG::SVG> frames = barycenter_layout(graph, vertices);
     auto final_svg = SVG::frame_animate(frames, 3);
 

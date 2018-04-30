@@ -158,4 +158,43 @@ namespace force_directed {
 
         return graph;
     }
+
+    TNEANet test() {
+        TNEANet graph;
+
+        // Add vertices
+        const int levels = 2;
+        for (int i = 0; i < levels; i++)
+            for (int j = 0; j < 3; j++)
+                graph.AddNode((i * 3) + j);
+
+        // Connect them
+        for (int i = 0; i < (levels - 1) * 3; i++)
+            graph.AddEdge(i, i + 3);
+
+        return graph;
+    }
+
+    void prism_distances(int min, int max) {
+        // Print out distances between points in a prism
+
+        double prev_dist = 0;
+        for (int i = min; i <= max; i++) {
+            auto graph = prism(i);
+            barycenter_layout(graph, i, 1);
+            auto x1 = get_xy(graph, i),
+                x2 = get_xy(graph, i + 1);
+
+            // Distance between x1 and x2
+            std::cout << "Prism on " << i << " vertices: " << sqrt(
+                pow((x2.first - x1.first), 2) + 
+                pow((x2.second - x1.second), 2)) <<
+                " - " << "Change: " << sqrt(
+                    pow((x2.first - x1.first), 2) +
+                    pow((x2.second - x1.second), 2)) - prev_dist << std::endl;
+            prev_dist = sqrt(
+                pow((x2.first - x1.first), 2) +
+                pow((x2.second - x1.second), 2));
+        }
+    }
 }

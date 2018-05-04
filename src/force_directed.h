@@ -21,7 +21,7 @@ namespace force_directed {
 
     std::pair<double, double> get_xy(TNEANet& graph, int id);
     std::pair<double, double> get_xy(TNEANet::TNodeI node);
-    SVG::SVG draw_graph(TNEANet& graph);
+    SVG::SVG draw_graph(TNEANet& graph, const double width = 500);
     void random_layout(TNEANet& graph);
     std::vector<SVG::SVG> force_directed_layout(ForceDirectedParams& params, TNEANet& graph);
     std::vector<SVG::SVG> barycenter_layout(TNEANet& graph, const size_t fixed_vertices = 5, const double width = 500);

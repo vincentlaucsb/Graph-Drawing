@@ -11,7 +11,9 @@ int main(int argc, char** argv) {
     options.add_options("optional")
         ("h,hypercube", "Animate drawing a hypercube of order 3")
         ("p,petersen", "Animate drawing the Petersen graph", cxxopts::value<bool>()->implicit_value("false"))
-        ("r,prism", "Animate drawing the Prism graph on n vertices", cxxopts::value<int>()->default_value("0"));
+        ("r,prism", "Animate drawing the Prism graph on n vertices", cxxopts::value<int>()->default_value("0"))
+        ("w,width", "Specify the width of the drawing", cxxopts::value<int>()->default_value("500"))
+        ("s,static", "Draw a still image of the graph", cxxopts::value<bool>()->implicit_value("false"));
 
     options.parse_positional({ "file" });
 
@@ -23,6 +25,7 @@ int main(int argc, char** argv) {
     auto result = options.parse(argc, (const char**&)argv);
 
     std::string file = result["file"].as<std::string>();
+    int width = result["width"].as<int>();
     TNEANet graph;
     size_t vertices;
     
@@ -39,14 +42,21 @@ int main(int argc, char** argv) {
         graph = prism(n);
         vertices = n;
     }
+    bool _static = result["static"].as<bool>();
 
     prism_distances(3, 30);
+    std::vector<SVG::SVG> frames = barycenter_layout(graph, vertices, width);
+    std::ofstream graph_out(file);
 
-    std::vector<SVG::SVG> frames = barycenter_layout(graph, vertices);
-    auto final_svg = SVG::frame_animate(frames, 3);
-
-    std::ofstream graph_out(file + ".svg");
-    graph_out << std::string(final_svg);
+    if (_static) {
+        auto final_svg = SVG::frame_animate(frames, 3);
+        graph_out << std::string(final_svg);
+    }
+    else {
+        auto& final_svg = frames.back();
+        final_svg.autoscale();
+        graph_out << std::string(final_svg);
+    }
 
     return 0;
 }

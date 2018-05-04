@@ -149,14 +149,14 @@ namespace force_directed {
         return ret;
     }
 
-    SVG::SVG draw_graph(TNEANet& graph) {
+    SVG::SVG draw_graph(TNEANet& graph, const double width) {
         SVG::SVG root;
         auto edges = root.add_child<SVG::Group>(), vertices = root.add_child<SVG::Group>();
         edges->set_attr("stroke", "black").set_attr("stroke-width", "1px");
 
         // Map IDs to nodes
         std::map<int, SVG::Circle*> nodes;
-        const float circle_radius = 10;
+        const double circle_radius = std::max(5.0, width / 50);
 
         for (auto node = graph.BegNI(); node < graph.EndNI(); node++) {
             auto coord = get_xy(node);
@@ -231,7 +231,7 @@ namespace force_directed {
             }
 
             // Algorithm trace
-            ret.push_back(draw_graph(graph));
+            ret.push_back(draw_graph(graph, width));
         } while (!converge);
 
         return ret;

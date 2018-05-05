@@ -3,6 +3,7 @@
 \usepackage{graphicx,float}
 \usepackage{amsmath,amsthm}
 \usepackage{subcaption} % For side-by-side figures
+\usepackage{algorithm,algorithmicx,algpseudocode} % For algorithms
 
 % For labelings/struct descriptions
 \usepackage{blindtext}
@@ -70,6 +71,51 @@ In the image below, the hypercube is placed in 500 x 500 pixel grid. The grid is
 \]
 
 The solution to this matrix is given by $x_1 = x_3 = 0, x_2 = \frac{250}{3}, x_4 = -\frac{250}{3}$.
+
+\subsection{Algorithms}
+\subsubsection{Newton-Raphson Iteration}
+\begin{algorithm}
+    \caption{Barycenter Layout}\label{euclid}
+    \begin{algorithmic}[1]       
+        % Begin Describing Algorithm   
+        \Procedure{barycenter}{$t$}
+        \State Layout $n$ fixed vertices in a convex polygon
+        \State Construct an (size of free vertices) matrix $A$ as follows
+        \[
+        A_{i, j} = \begin{cases}
+        \deg(v) &{\text{if $i = j$}} \\
+        -1      &{\text{if adjacent}} \\
+        0       &{\text{otherwise}} \\
+        \end{cases}
+        \]
+        \State Solve $Mx = f_x$ to find the x-coordinates
+        \State Solve $My = f_y$ to find the y-coordinates
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Linear System}
+As seen above, the problem of applying the barycenter method can also been modeled with a linear system.
+
+\begin{algorithm}
+    \caption{Barycenter Layout}\label{euclid}
+    \begin{algorithmic}[1]       
+        % Begin Describing Algorithm   
+        \Procedure{barycenter}{$t$}
+        \State Layout $n$ fixed vertices in a convex polygon
+        \State Construct an (size of free vertices) matrix $A$ as follows
+        \[
+        A_{i, j} = \begin{cases}
+            \deg(v) &{\text{if $i = j$}} \\
+            -1      &{\text{if adjacent}} \\
+            0       &{\text{otherwise}} \\
+        \end{cases}
+        \]
+        \State Solve $Mx = f_x$ to find the x-coordinates
+        \State Solve $My = f_y$ to find the y-coordinates
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
 
 \subsection{Resolution}
 One the the main drawbacks of this algorithm is potentially poor resolution, i.e. the more edges and vertices we add to our graph, the harder it becomes to distinguish the different features of our graph. This is demonstrated best by the prism graph.

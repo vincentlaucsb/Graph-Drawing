@@ -236,4 +236,56 @@ namespace force_directed {
 
         return ret;
     }
+
+    BarycenterLayout barycenter_layout_la(
+        TNEANet& graph, const size_t fixed_vertices, const double width) {
+        /** Solve the barycenter layout problem using linear algebra */
+        std::vector<TNEANet::TNodeI> fixed, free;
+        std::vector<Point> polygon = SVG::util::polar_points((int)fixed_vertices, 0, 0, width / 2);
+
+        auto node = graph.BegNI();
+        auto point = polygon.begin();
+        for (; (node < graph.EndNI()) && (fixed.size() < fixed_vertices); node++) {
+            fixed.push_back(node);
+
+            // Place along polygon
+            graph.AddFltAttrDatN(node, point->first, "x");
+            graph.AddFltAttrDatN(node, point->second, "y");
+            point++;
+        }
+
+        for (; node < graph.EndNI(); node++) free.push_back(node);
+
+        MatrixXd points(free.size(), free.size());
+        VectorXd x(free.size()), y(free.size());;
+
+        // Populate the matrix
+        for (int i = 0; i < (int)free.size(); i++) {
+            for (int j = 0; j < (int)free.size(); j++) {
+                if (i == j) points(i, j) = (int)free[i].GetDeg();
+                else if (free[i].IsNbrNId(free[j].GetId())) points(i, j) = -1;
+                else points(i, j) = 0;
+            }
+        }
+
+        // Populate vectors of fixed positions
+        for (int i = 0; i < fixed.size(); i++) {
+            x(i) = get_xy(fixed[i]).first;
+            y(i) = get_xy(fixed[i]).second;
+        }
+
+        // std::cout << "Here is the matrix A:\n" << points << std::endl;
+        // std::cout << "Here is the vector b:\n" << vars << std::endl;
+        VectorXd sol_x = points.fullPivHouseholderQr().solve(x),
+            sol_y = points.fullPivHouseholderQr().solve(y);
+        // std::cout << "The solution is:\n" << sol << std::endl;
+
+        // Set graph positions
+        for (size_t i = 0; i < sol_x.size(); i++) {
+            graph.AddFltAttrDatN(free[i], sol_x(i), "x");
+            graph.AddFltAttrDatN(free[i], sol_y(i), "y");
+        }
+
+        return { draw_graph(graph), points, x, y, sol_x, sol_y };
+    }
 }

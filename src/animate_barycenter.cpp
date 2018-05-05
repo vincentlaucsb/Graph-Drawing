@@ -4,16 +4,19 @@
 int main(int argc, char** argv) {
     using namespace force_directed;
 
-    cxxopts::Options options(argv[0], "Animates drawing a graph with the barycenter method");
+    cxxopts::Options options(argv[0],
+        "Produces animations of a Newton-Raphson based version of the "
+        "barycenter drawing algorithm or static images from a linear "
+        "system based solver");
     options.positional_help("[output file]");
     options.add_options("required")
         ("f,file", "Output file", cxxopts::value<std::string>());
     options.add_options("optional")
-        ("h,hypercube", "Animate drawing a hypercube of order 3")
-        ("p,petersen", "Animate drawing the Petersen graph", cxxopts::value<bool>()->implicit_value("false"))
+        ("h,hypercube", "Animate drawing a hypercube of order 3", cxxopts::value<bool>()->default_value("true"))
+        ("p,petersen", "Animate drawing the Petersen graph", cxxopts::value<bool>()->default_value("false"))
         ("r,prism", "Animate drawing the Prism graph on n vertices", cxxopts::value<int>()->default_value("0"))
         ("w,width", "Specify the width of the drawing", cxxopts::value<int>()->default_value("500"))
-        ("s,static", "Draw a still image of the graph", cxxopts::value<bool>()->implicit_value("false"));
+        ("s,static", "Draw a still image of the graph (uses linear solver)", cxxopts::value<bool>()->default_value("false"));
 
     options.parse_positional({ "file" });
 
@@ -25,6 +28,7 @@ int main(int argc, char** argv) {
     auto result = options.parse(argc, (const char**&)argv);
 
     std::string file = result["file"].as<std::string>();
+    bool _static = result["static"].as<bool>();
     int width = result["width"].as<int>();
     TNEANet graph;
     size_t vertices;
@@ -42,19 +46,31 @@ int main(int argc, char** argv) {
         graph = prism(n);
         vertices = n;
     }
-    bool _static = result["static"].as<bool>();
 
-    prism_distances(3, 30);
-    std::vector<SVG::SVG> frames = barycenter_layout(graph, vertices, width);
     std::ofstream graph_out(file);
-
     if (_static) {
-        auto final_svg = SVG::frame_animate(frames, 3);
-        graph_out << std::string(final_svg);
+        auto output = barycenter_layout_la(graph, vertices, width);
+        output.image.autoscale();
+
+        graph_out << std::string(output.image);
+        std::cout << "Matrix" << std::endl;
+        std::cout << output.matrix << std::endl << std::endl;
+
+        std::cout << "Fixed vertex positions (x)" << std::endl;
+        std::cout << output.fixed_x << std::endl << std::endl;
+
+        std::cout << "Fixed vertex positions (y)" << std::endl;
+        std::cout << output.fixed_y << std::endl << std::endl;
+
+        std::cout << "Free vertex positions (x)" << std::endl;
+        std::cout << output.sol_x << std::endl << std::endl;
+
+        std::cout << "Free vertex positions (y)" << std::endl;
+        std::cout << output.sol_y << std::endl;
     }
     else {
-        auto& final_svg = frames.back();
-        final_svg.autoscale();
+        std::vector<SVG::SVG> frames = barycenter_layout(graph, vertices, width);
+        auto final_svg = SVG::frame_animate(frames, 3);
         graph_out << std::string(final_svg);
     }
 

@@ -1,5 +1,6 @@
 #pragma once
 #define NOMINMAX // Thanks Windows.h
+#include "../Eigen/Dense"
 #include "Snap.h"
 #include "svg.hpp"
 #include <math.h>
@@ -12,6 +13,8 @@
 
 namespace force_directed {
     using SVG::Point;
+    using Eigen::MatrixXd;
+    using Eigen::VectorXd;
 
     struct ForceDirectedParams {
         double luv;
@@ -19,12 +22,24 @@ namespace force_directed {
         double kuv2;
     };
 
+    struct BarycenterLayout {
+        /** Return value of linear algebra based solver */
+        SVG::SVG image;
+        MatrixXd matrix;
+        VectorXd fixed_x;
+        VectorXd fixed_y;
+        VectorXd sol_x;
+        VectorXd sol_y;
+    };
+
     std::pair<double, double> get_xy(TNEANet& graph, int id);
     std::pair<double, double> get_xy(TNEANet::TNodeI node);
     SVG::SVG draw_graph(TNEANet& graph, const double width = 500);
     void random_layout(TNEANet& graph);
     std::vector<SVG::SVG> force_directed_layout(ForceDirectedParams& params, TNEANet& graph);
-    std::vector<SVG::SVG> barycenter_layout(TNEANet& graph, const size_t fixed_vertices = 5, const double width = 500);
+    std::vector<SVG::SVG> barycenter_layout(TNEANet& graph,
+        const size_t fixed_vertices = 5, const double width = 500);
+    BarycenterLayout barycenter_layout_la(TNEANet& graph, const size_t fixed_vertices, const double width = 500);
 
     // Helpers
     using EdgeSet = std::set<TNEANet::TEdgeI>;

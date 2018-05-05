@@ -17,6 +17,12 @@ if(CMAKE_HOST_UNIX)
 endif()
 
 ## lib
+add_library(Eigen ${CMAKE_SOURCE_DIR}/lib/Eigen/)
+set_target_properties(Eigen PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(Eigen PUBLIC
+	${CMAKE_SOURCE_DIR}/lib/Eigen/
+)
+
 add_library(snap ${CMAKE_SOURCE_DIR}/lib/snap-core/Snap.cpp)
 target_include_directories(snap PUBLIC
 	${CMAKE_SOURCE_DIR}/lib/glib-core/

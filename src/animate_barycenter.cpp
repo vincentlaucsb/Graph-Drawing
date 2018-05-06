@@ -12,9 +12,10 @@ int main(int argc, char** argv) {
     options.add_options("required")
         ("f,file", "Output file", cxxopts::value<std::string>());
     options.add_options("optional")
-        ("h,hypercube", "Animate drawing a hypercube of order 3", cxxopts::value<bool>()->default_value("true"))
+        ("h,hypercube", "Animate drawing a hypercube of order 3")
         ("p,petersen", "Animate drawing the Petersen graph", cxxopts::value<bool>()->default_value("false"))
         ("r,prism", "Animate drawing the Prism graph on n vertices", cxxopts::value<int>()->default_value("0"))
+        ("k,complete", "Draw the complete graph on n vertices", cxxopts::value<int>()->default_value("0"))
         ("w,width", "Specify the width of the drawing", cxxopts::value<int>()->default_value("500"))
         ("s,static", "Draw a still image of the graph (uses linear solver)", cxxopts::value<bool>()->default_value("false"));
 
@@ -40,6 +41,11 @@ int main(int argc, char** argv) {
     else if (result["petersen"].as<bool>()) {
         graph = petersen();
         vertices = 5;
+    }
+    else if (result["complete"].as<int>()) {
+        graph = complete(result["complete"].as<int>());
+        vertices = 4;
+        _static = true;
     }
     else if (result["prism"].as<int>()) {
         auto n = result["prism"].as<int>();

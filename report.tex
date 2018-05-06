@@ -1,7 +1,7 @@
 \documentclass[11pt]{article}
 \usepackage[margin=1.25in]{geometry}
 \usepackage{graphicx,float}
-\usepackage{amsmath,amsthm}
+\usepackage{amsmath,amsthm,amsfonts}
 \usepackage{subcaption} % For side-by-side figures
 \usepackage{algorithm,algorithmicx,algpseudocode} % For algorithms
 
@@ -111,17 +111,117 @@ As seen above, the problem of applying the barycenter method can also been model
             0       &{\text{otherwise}} \\
         \end{cases}
         \]
+        \State Construct an (number of free vertices) vector $x$ as follows
+        \[
+        x_{i} = \sum{...}
+        \]
         \State Solve $Mx = f_x$ to find the x-coordinates
         \State Solve $My = f_y$ to find the y-coordinates
         \EndProcedure
     \end{algorithmic}
 \end{algorithm}
 
-\subsection{Resolution}
-One the the main drawbacks of this algorithm is potentially poor resolution, i.e. the more edges and vertices we add to our graph, the harder it becomes to distinguish the different features of our graph. This is demonstrated best by the prism graph.
-
-\paragraph{Prism Graph}
+\subsection{Prism Graph}
 The prism graph denoted $\Pi_{n}$ is constructed by taking the vertices and edges of an $n$-prism. If we look below, the distance between vertices gets increasingly smaller as $n$ increases.
+
+\subsubsection{Symmetry}
+Under certain conditions, the barycenter method produces drawings which preserve rotational symmetry.
+
+\paragraph{Theorem: Points along a unit circle form an eigenvector} Consider the linear system for coordinates of the free vertices of the prism graph $\Pi_n$, and then take its corresponding matrix $M$. Now, starting at $(1, 0)$, place $n$ points equally along the perimeter of the unit circle. If we create a vector $x = (x_1, ..., x_n)$, then where $x_i$ is the x-coordinate of the $i^{th}$ unit circle point, then $x$ is an eigenvector of $M$.
+
+\bigskip
+
+Moreover, the same can be said for the y-coordinates and if we write $Mx = \lambda_x x$, $My = \lambda_y y$, it can be shown that $\lambda_x = \lambda_y$.
+
+\begin{proof}
+    First, notice that $M = 3I + N$, where $N$ is a matrix composed of all of the $-1's$ in $M$ (and is zero everywhere else). Hence, $N\vec{x}$ is of the form
+    \[
+        \begin{bmatrix}
+            0  & -1  & 0   & ... & 0   & -1 \\
+            -1 & \ddots   & \ddots  & 0   & ... & 0 \\
+            0  & \ddots  & \ddots   & \ddots  & ... & 0 \\
+            0  & ... & \ddots   & \ddots  & \ddots   & 0 \\
+            0 & 0   & ... & \ddots   & \ddots  & -1 \\
+            -1 & 0   & ... & 0   & -1  & 0 \\
+        \end{bmatrix}
+        \begin{bmatrix}
+            \cos{0} \\ 
+            \cos{\frac{2 \pi}{n}} \\
+            \dots \\
+            \cos{\frac{2 \pi(n-2)}{n}} \\
+            \cos{\frac{2 \pi(n-1)}{n}}
+        \end{bmatrix}
+    \]
+    
+    By distributivity,
+    \[
+    Mx = (3I + N)x = 3Ix + Nx
+    \]
+    
+    Hence, showing that $Nx = \lambda x$ is equivalent to showing that the following holds for some $\lambda \in \mathbb{R}$.
+    
+    \[\begin{cases}
+        -\cos{\frac{2 \pi}{n}} - \cos{\frac{2\pi(n-1)}{n}} = \lambda \cos{0} &\text{Equation for the first row} \\
+        -\cos{\frac{2 \pi (i - 2)}{n}} - \cos{\frac{2 \pi i}{n}} = \lambda \cos{\frac{2\pi(i-1)}{n}}
+        &\text{Equation for the $i^{th}$ row} \\
+    \end{cases}\]
+    
+    Now, the first equation implies that 
+    \[\begin{aligned}
+        \lambda
+        &= -\left[
+            \cos{\frac{2\pi}{n}} + \cos{\frac{2\pi n - 2\pi}{n}}   
+            \right] \\
+        &= -2\left[
+            \cos{ \frac{
+                2 \pi + 2\pi n - 2\pi    
+            }{ 2n } }
+            \cos{ \frac{
+                2\pi - 2\pi n + 2\pi
+                }{ 2n }
+            } \right]
+        &\text{Using sum-product identity} \\
+        &= -2\left[
+            \cos{ \frac{2 \pi n}{2n} } \cos{\frac{ 4\pi - 2\pi n }{2n} }
+        \right] \\
+        &= -2\left[
+            \cos{ \pi } \cos{ \frac{ 2\pi}{n} - \pi }
+        \right] \\
+        &= 2\left[
+        \cos{ \pi - \frac{ 2\pi}{n}} \right]
+        &\text{cos is an even function} \\
+        &= -2\left[ \cos{ - \frac{ 2\pi}{n}} \right]
+        = -2\left[ \cos{ \frac{ 2\pi}{n}} \right]
+        &\text{Supplementary angles}
+   \end{aligned}\]
+   
+   Now, we just need to show take the equation for the $i^{th}$ row and notice that
+   \[
+   \begin{aligned}
+        -\left[\cos{\frac{2 \pi (i - 2)}{n}} + \cos{\frac{2 \pi i}{n}}\right]
+        &= -2\left[
+            \cos{ \frac{2\pi(i - 2) + 2\pi i}{2n} }
+            \cos{ \frac{2\pi(i - 2) - 2\pi i}{2n} }
+        \right]
+        &\text{Sum-product identity} \\
+        &= -2\left[
+            \cos{ \frac{\pi i - 2\pi + \pi i}{n} }
+            \cos{ \frac{\pi i + 2\pi - \pi i}{n} }
+        \right] \\
+        &= -2\left[
+            \cos{ \frac{\pi i - 2\pi + \pi i}{n} }
+            \cos{ \frac{2\pi}{n} }
+        \right] \\
+        &= \lambda \cos{ \frac{2\pi(i - 1)}{n} }
+   \end{aligned}
+   \]
+   
+   as desired.
+    
+\end{proof}
+
+\subsubsection{Resolution}
+One the the main drawbacks of this algorithm is potentially poor resolution, i.e. the more edges and vertices we add to our graph, the harder it becomes to distinguish the different features of our graph. This is demonstrated best by the prism graph.
 
 \begin{figure}[H]
     \begin{subfigure}{.3\textwidth}
@@ -161,56 +261,25 @@ The prism graph denoted $\Pi_{n}$ is constructed by taking the vertices and edge
     \caption{$\Pi_5, \Pi_{10}, \Pi_{20}$ and $\Pi_{40}$ as drawn by Tutte's algorithm}
 \end{figure}
 
-\paragraph{Theorem} For any pair of adjacent "free" vertices in the prism graph drawn in the unit square, the distance between them is $O(\frac{1}{n})$.
+\paragraph{Theorem} For every fixed vertex $u$ in the prism graph $\Pi_{n}$, the distance between it and its adjacent free vertex $v$ is $O(\frac{1}{n})$.
 
 \begin{proof}
-    Let $P_n$ be the prism graph on $n$ vertices and show that the distance between any two vertices is $O(\frac{1}{n})$ by showing that $\text{dist(}{p_i, p_{i+1})} \leq a \cdot \frac{1}{n}$ for some constant a. Let $a \geq \frac{2\sqrt{2}}{n}$.
+    From the theorem above, we know that
+    \[ v = u \cdot \frac{1}{3 -2\cos{\frac{2\pi}{n}}} \]
     
-    \bigskip
-    
-    First, for any $p_i$ we have
+    Hence,
     \[
-        p_i = \left(
-            \frac{x_{i-1} + x_{i+1} + f_{ix}}{n} , % x
-            \frac{y_{i-1} + y_{i+1} + f_{iy}}{n} % y
-        \right)
-    \]
-    
-    and by extension
-    \[
-        p_{i + 1} = \left(
-        \frac{x_i + x_{i+2} + f_{i + 1x}}{n} , % x
-        \frac{y_i + y_{i+2} + f_{i + 1y}}{n} % y
-        \right)
-    \]
-    
-    Thus,
-    \[
-    \text{dist(}{p_i, p_{i + 1}}) = \sqrt{
-        \left(\frac{x_i + x_{i+2} + f_{i+1} - x_{i-1} - x_{i+1} - f_i}{n}\right)^2 +
-        \left(\frac{y_i + y_{i+2} + f_{i+1} - y_{i-1} - y_{i+1} - f_i}{n}\right)^2
+    \text{dist}\left({u, v}\right) = 
+    \sqrt{
+    % x-coord        
+    \left(u_x - u_x \cdot \frac{1}{3 -2\cos{\frac{2\pi}{n}}}
+    \right)^2 +
+    %
+    % y-coord
+    \left(u_y - u_y \cdot \frac{1}{3 -2\cos{\frac{2\pi}{n}}}
+    \right)^2
     }
     \]
-    
-    So simplifying this gives,
-    
-    \[\begin{aligned}
-    \text{dist(}{p_i, p_{i + 1}})
-    &= \sqrt{
-        \left(\frac{x_{i+2} + f_{i+1}}{n}\right)^2 +
-        \left(\frac{y_{i+2} + f_{i+1}}{n}\right)^2
-        } \\
-    &= \sqrt{
-        \left(\frac{2}{n}\right)^2 +
-        \left(\frac{2}{n}\right)^2
-    } 
-    &\text{Because $P$ is drawn within unit square} \\
-    &= \sqrt{\frac{4}{n^2} + \frac{4}{n^2}} \\
-    &= \sqrt{\frac{8}{n^2}} \\
-    &= 2\sqrt{2}\sqrt{\frac{1}{n^2}} \\
-    &= \frac{2\sqrt{2}}{n} \leq a \cdot \frac{1}{n}
-    \end{aligned}\]
-    as desired.    
 \end{proof}
 
 \end{document}

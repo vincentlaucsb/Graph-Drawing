@@ -46,3 +46,6 @@ target_link_libraries(animate_spring snap force_directed)
 
 add_executable(animate_tutte src/animate_barycenter.cpp)
 target_link_libraries(animate_tutte snap force_directed)
+
+add_executable(tutte_prism src/barycenter_prism.cpp)
+target_link_libraries(tutte_prism snap force_directed)

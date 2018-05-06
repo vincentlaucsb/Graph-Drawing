@@ -269,16 +269,25 @@ namespace force_directed {
         }
 
         // Populate vectors of fixed positions
-        for (int i = 0; i < fixed.size(); i++) {
-            x(i) = get_xy(fixed[i]).first;
-            y(i) = get_xy(fixed[i]).second;
+        for (size_t i = 0; i < free.size(); i++) {
+            // Sum up fixed vertices adjacent to our free boi
+            double sum_x = 0, sum_y = 0;
+            for (auto& f : fixed) {
+                if (free[i].IsNbrNId(f.GetId())) {
+                    sum_x += get_xy(f).first;
+                    sum_y += get_xy(f).second;
+                }
+            }
+
+            x(i) = sum_x;
+            y(i) = sum_y;
         }
 
         // std::cout << "Here is the matrix A:\n" << points << std::endl;
-        // std::cout << "Here is the vector b:\n" << vars << std::endl;
+        // std::cout << "Here is the vector b:\n" << x << std::endl;
         VectorXd sol_x = points.fullPivHouseholderQr().solve(x),
             sol_y = points.fullPivHouseholderQr().solve(y);
-        // std::cout << "The solution is:\n" << sol << std::endl;
+        // std::cout << "The solution is:\n" << sol_x << std::endl;
 
         // Set graph positions
         for (size_t i = 0; i < sol_x.size(); i++) {

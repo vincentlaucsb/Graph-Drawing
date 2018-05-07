@@ -161,15 +161,15 @@ namespace force_directed {
 
     void prism_distances(int min, int max) {
         // Print out distances between points in a prism
-        std::cout << "Distance between free vertices on a prism drawn "
+        std::cout << "Distance between fixed vertices and their adjacent free vertex on a prism drawn "
             "in the unit square" << std::endl <<
             "n/actual distance/theoretical upper bound" << std::endl;
 
         for (int i = min; i <= max; i++) {
             auto graph = prism(i);
             barycenter_layout_la(graph, i, 1);
-            auto x1 = get_xy(graph, i + 1),
-                x2 = get_xy(graph, i + 2);
+            auto x1 = get_xy(graph, 0),
+                x2 = get_xy(graph, i);
 
             // Distance between x1 and x2
             std::cout << i << "/" << sqrt(
@@ -177,7 +177,7 @@ namespace force_directed {
                 pow((x2.second - x1.second), 2));
 
             // Theoretical
-            std::cout << "/" << sqrt(8/pow(i, 2));
+            std::cout << "/" << (1.0 - 1.0/(3.0 - 2.0 * cos((2.0 * PI)/(double)i)));
             std::cout << std::endl;
         }
     }

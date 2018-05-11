@@ -49,3 +49,7 @@ target_link_libraries(animate_tutte snap force_directed)
 
 add_executable(tutte_prism src/barycenter_prism.cpp)
 target_link_libraries(tutte_prism snap force_directed)
+
+## tree executables
+add_executable(tree_draw src/tree.cpp src/tree_draw.cpp src/tree_main.cpp)
+add_executable(tree_paper src/tree.cpp src/tree_paper.cpp src/tree_draw.cpp)

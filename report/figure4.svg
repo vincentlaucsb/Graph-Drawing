@@ -1,0 +1,60 @@
+<svg height="180.0" width="220.0" xmlns="http://www.w3.org/2000/svg">
+	<svg height="180.0" viewBox="-35.0 -15.0 110.0 180.0" width="110.0" x="0.0" xmlns="http://www.w3.org/2000/svg" y="0">
+		<style type="text/css">
+			<![CDATA[
+				circle.leaf {
+					text-anchor: middle;
+				}
+				circle.left_node {
+					text-anchor: end;
+				}
+			]]>
+		</style>
+		<g class="edges" stroke="black" stroke-width="1px">
+			<line x1="40.0" x2="60.0" y1="120.0" y2="150.0" />
+			<line x1="20.0" x2="40.0" y1="90.0" y2="120.0" />
+			<line x1="0.0" x2="20.0" y1="60.0" y2="90.0" />
+			<line x1="-20.0" x2="0.0" y1="30.0" y2="60.0" />
+			<line x1="0.0" x2="-20.0" y1="0.0" y2="30.0" />
+			<line x1="0.0" x2="20.0" y1="0.0" y2="30.0" />
+		</g>
+		<g class="vertices">
+			<circle cx="0.0" cy="0.0" r="5.0" />
+			<circle cx="-20.0" cy="30.0" r="5.0" />
+			<circle cx="0.0" cy="60.0" r="5.0" />
+			<circle cx="20.0" cy="90.0" r="5.0" />
+			<circle cx="40.0" cy="120.0" r="5.0" />
+			<circle cx="60.0" cy="150.0" r="5.0" />
+			<circle cx="20.0" cy="30.0" r="5.0" />
+		</g>
+	</svg>
+	<svg height="180.0" viewBox="-75.0 -15.0 110.0 180.0" width="110.0" x="110.0" xmlns="http://www.w3.org/2000/svg" y="0">
+		<style type="text/css">
+			<![CDATA[
+				circle.leaf {
+					text-anchor: middle;
+				}
+				circle.left_node {
+					text-anchor: end;
+				}
+			]]>
+		</style>
+		<g class="edges" stroke="black" stroke-width="1px">
+			<line x1="0.0" x2="-20.0" y1="0.0" y2="30.0" />
+			<line x1="-40.0" x2="-60.0" y1="120.0" y2="150.0" />
+			<line x1="-20.0" x2="-40.0" y1="90.0" y2="120.0" />
+			<line x1="0.0" x2="-20.0" y1="60.0" y2="90.0" />
+			<line x1="20.0" x2="0.0" y1="30.0" y2="60.0" />
+			<line x1="0.0" x2="20.0" y1="0.0" y2="30.0" />
+		</g>
+		<g class="vertices">
+			<circle cx="0.0" cy="0.0" r="5.0" />
+			<circle cx="-20.0" cy="30.0" r="5.0" />
+			<circle cx="20.0" cy="30.0" r="5.0" />
+			<circle cx="0.0" cy="60.0" r="5.0" />
+			<circle cx="-20.0" cy="90.0" r="5.0" />
+			<circle cx="-40.0" cy="120.0" r="5.0" />
+			<circle cx="-60.0" cy="150.0" r="5.0" />
+		</g>
+	</svg>
+</svg>

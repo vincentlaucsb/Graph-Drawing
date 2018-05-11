@@ -108,7 +108,7 @@ namespace force_directed {
     }
 
     std::vector<SVG::SVG> force_directed_layout(ForceDirectedParams& params, TNEANet& graph) {
-        // Use Eades' spring layout algorithm, creating a frame between each iteration
+        /** Use Eades' spring layout algorithm, creating a frame between each iteration */
         std::vector<SVG::SVG> ret;
 
         // Layout points randomly

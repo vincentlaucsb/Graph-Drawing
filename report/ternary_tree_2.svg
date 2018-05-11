@@ -1,0 +1,53 @@
+<svg height="110.0" viewBox="-145.0 -25.0 290.0 110.0" width="290.0" xmlns="http://www.w3.org/2000/svg">
+	<style type="text/css">
+		<![CDATA[
+			circle.leaf {
+				text-anchor: middle;
+			}
+			circle.left_node {
+				text-anchor: end;
+			}
+		]]>
+	</style>
+	<g class="edges" stroke="black" stroke-width="1px">
+		<line x1="-90.0" x2="-120.0" y1="30.0" y2="60.0" />
+		<line x1="-90.0" x2="-90.0" y1="30.0" y2="60.0" />
+		<line x1="-90.0" x2="-60.0" y1="30.0" y2="60.0" />
+		<line x1="0.0" x2="-90.0" y1="0.0" y2="30.0" />
+		<line x1="0.0" x2="-30.0" y1="30.0" y2="60.0" />
+		<line x1="0.0" x2="0.0" y1="30.0" y2="60.0" />
+		<line x1="0.0" x2="30.0" y1="30.0" y2="60.0" />
+		<line x1="0.0" x2="0.0" y1="0.0" y2="30.0" />
+		<line x1="90.0" x2="60.0" y1="30.0" y2="60.0" />
+		<line x1="90.0" x2="90.0" y1="30.0" y2="60.0" />
+		<line x1="90.0" x2="120.0" y1="30.0" y2="60.0" />
+		<line x1="0.0" x2="90.0" y1="0.0" y2="30.0" />
+	</g>
+	<g class="vertices">
+		<circle cx="0.0" cy="0.0" r="5.0" />
+		<circle cx="-90.0" cy="30.0" r="5.0" />
+		<text x="-90.0" y="30.0">-4.5</text>
+		<circle cx="-120.0" cy="60.0" r="5.0" />
+		<text x="-120.0" y="60.0">-1.5</text>
+		<circle cx="-90.0" cy="60.0" r="5.0" />
+		<text x="-90.0" y="60.0">0.0</text>
+		<circle cx="-60.0" cy="60.0" r="5.0" />
+		<text x="-60.0" y="60.0">1.5</text>
+		<circle cx="0.0" cy="30.0" r="5.0" />
+		<text x="0.0" y="30.0">0.0</text>
+		<circle cx="-30.0" cy="60.0" r="5.0" />
+		<text x="-30.0" y="60.0">-1.5</text>
+		<circle cx="0.0" cy="60.0" r="5.0" />
+		<text x="0.0" y="60.0">0.0</text>
+		<circle cx="30.0" cy="60.0" r="5.0" />
+		<text x="30.0" y="60.0">1.5</text>
+		<circle cx="90.0" cy="30.0" r="5.0" />
+		<text x="90.0" y="30.0">4.5</text>
+		<circle cx="60.0" cy="60.0" r="5.0" />
+		<text x="60.0" y="60.0">-1.5</text>
+		<circle cx="90.0" cy="60.0" r="5.0" />
+		<text x="90.0" y="60.0">0.0</text>
+		<circle cx="120.0" cy="60.0" r="5.0" />
+		<text x="120.0" y="60.0">1.5</text>
+	</g>
+</svg>

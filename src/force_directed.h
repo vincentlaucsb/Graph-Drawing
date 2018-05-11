@@ -1,6 +1,6 @@
 #pragma once
 #define NOMINMAX // Thanks Windows.h
-#include "../Eigen/Dense"
+#include "../lib/Eigen/Dense"
 #include "Snap.h"
 #include "svg.hpp"
 #include <math.h>

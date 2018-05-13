@@ -30,6 +30,27 @@ target_include_directories(snap PUBLIC
 	${CMAKE_SOURCE_DIR}/lib/snap-core/
 )
 
+file(GLOB_RECURSE glpk_files "*.c")
+add_library(glpk ${glpk_files})
+set_target_properties(glpk PROPERTIES LINKER_LANGUAGE C)
+target_include_directories(glpk PUBLIC
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/amd
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/api
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/bflib
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/colamd
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/draft
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/env
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/intopt
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/minisat
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/misc
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/mpl
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/npp
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/proxy
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/simplex
+	${CMAKE_SOURCE_DIR}/lib/glpk/src/zlib
+)
+
 add_library(force_directed
     ${CMAKE_SOURCE_DIR}/src/force_directed.h
 	${CMAKE_SOURCE_DIR}/src/layout.cpp
@@ -53,3 +74,7 @@ target_link_libraries(tutte_prism snap force_directed)
 ## tree executables
 add_executable(tree_draw src/tree.cpp src/tree_draw.cpp src/tree_main.cpp)
 add_executable(tree_paper src/tree.cpp src/tree_paper.cpp src/tree_draw.cpp)
+
+## tree_lp
+add_executable(tree_lp src/tree_lp.cpp)
+target_link_libraries(tree_lp glpk)

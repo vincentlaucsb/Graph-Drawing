@@ -1,10 +1,9 @@
-/* spxsamp1.c */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
 #include <unordered_map>
 #include <deque>
+#include "svg.hpp"
 #include "glpk.h"
 
 struct TreeNode {
@@ -12,6 +11,54 @@ struct TreeNode {
     TreeNode* left;
     TreeNode* right;
 };
+
+// Map level numbers to lists of nodes at that level
+using LevelMap = std::unordered_map<int, std::vector<TreeNode*>>;
+
+SVG::SVG draw_tree(glp_prob* P, LevelMap& level) {
+    // Given a solved linear program and the corresponding tree, draw it
+    SVG::SVG root;
+    root.style("line").set_attr("stroke", "#000000");
+
+    size_t current_level = 0, current_level_index = 0;
+    const double scaling = 100;
+
+    // Associated tree pointers with circle objects
+    std::unordered_map<TreeNode*, SVG::Circle*> vertices;
+
+    // Add vertices
+    for (int i = 3; i <= glp_get_num_cols(P); i++) {
+        if (current_level_index >= level[current_level].size()) {
+            current_level++;
+            current_level_index = 0;
+        }
+
+        vertices[level[current_level][current_level_index]] = root.add_child<SVG::Circle>(
+            glp_get_col_prim(P, i) * scaling, // x-value
+            (double)current_level * scaling,  // y-value
+            10 // circle radius
+        );
+
+        current_level_index++;
+    }
+
+    // Add edges
+    for (auto& elem : vertices) {
+        // Left
+        if (elem.first->left) root.add_child<SVG::Line>(
+            *(vertices[elem.first]),
+            *(vertices[elem.first->left])
+        );
+
+        // Right
+        if (elem.first->right) root.add_child<SVG::Line>(
+            *(vertices[elem.first]),
+            *(vertices[elem.first->right])
+        );
+    }
+
+    return root;
+}
 
 int main()
 {
@@ -46,7 +93,7 @@ int main()
     root.right->right = new TreeNode();
 
     // Keep track of all nodes on a given level
-    std::unordered_map<int, std::vector<TreeNode*>> levels;
+    LevelMap levels;
 
     // Assign IDs
     // First item of pair = parent of node, second item = node
@@ -176,6 +223,12 @@ int main()
     // Solve problem
     glp_simplex(P, NULL);
     glp_print_sol(P, "test.txt");
+
+    // Draw tree
+    std::ofstream outfile("test.svg");
+    auto drawing = draw_tree(P, levels);
+    drawing.autoscale();
+    outfile << (std::string)drawing;
 
     glp_delete_prob(P);
     return 0;

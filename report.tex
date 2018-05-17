@@ -16,6 +16,8 @@
 % Commands
 \newcommand{\abs}[1]{\left|#1\right|}
 \newcommand{\dist}[2]{\text{dist}\left({#1, #2}\right)}
+\newcommand{\leftc}[1]{\text{left child}\left(#1\right)}
+\newcommand{\rightc}[1]{\text{right child}\left(#1\right)}
 
 % Definitions, Theorems, and Corollaries
 \newtheorem{defn}{Definition}[section]
@@ -33,8 +35,13 @@
 
 \chapter{Tree Drawing Algorithms}
 \section{Motivation}
-Trees with at most two child nodes are used widely in computer science. The simplicity of their structure easily lends to mathematical analysis about algorithms operating on binary trees. Given the vast utility of this tree, many have tried to define algorithms which draw binary trees.
+Many types of graphs are used in computer science, and one of the most common is the tree--especially binary trees. Binary trees--trees with at most two nodes--form the basis for many data structures in computer science. For example, when many people thinking of storing a collection of items to be searched later, the naive solution is to store them in a list. When checking to see if an item is part of this collection, a naive solution is to simply iterate through the list, comparing our item against each element of the list. In other words, for a collection of $n$ items, we have to perform $n$ comparisons.
 
+\bigskip
+
+However, a binary search tree is constructed such that for every node, every child node on its left is less than the value at the root, and vice versa for the right side. Hence, when searching for an item, if our item is less than the value at the current node, then we only need to keep searching in the left subtree. As a result, we can find an item we want with on average just $\log_2{n}$ comparisons. As a result of the many implementations of trees in computers, many have discussed ways of visualizing these data structures.
+
+\iffalse
 \section{Reingold-Tillford (1981)}
 One classic algorithm used to layout binary trees is described by Reingold and Tillford. 
 
@@ -187,6 +194,44 @@ The figures below show the displacements set by the algorithm for each node. Fro
     
     \caption{Algorithm trace for complete binary trees of heights 2 through 6}
 \end{figure}
+\fi
+
+\section{Tree Drawing as a Linear Program -- Supowit and Reingold (1981)}
+\subsection{The Problem of Narrow Trees}
+Unfortunately, as shown earlier (note to self: show earlier), locally minimizing the width of every subtree does not achieve the goal of a minimum width drawing. Sometimes in order to draw a tree as narrow as possible, some subtrees have to be drawn non-optimally.
+
+\subsection{Aesthetic Trees}
+
+In the algorithm below, the problem of drawing a tree is formulated as a linear program. The problem is drawing a tree can be described as finding the narrowest possible drawing such that it matches several aesthetics:
+\begin{enumerate}
+    \item \textbf{Layering} All nodes at the same level (number of edges between a node and the root) share the same y-coordinate
+    \item \textbf{Child Positioning} Each left child is placed strictly to the left of its parent, and each right child is placed strictly to the right of its parent
+    \item \textbf{Separation} For any two nodes at the same level, they must be placed at least 2 units apart.
+    \item \textbf{Centering} If a parent has two children, then it must be centered over them
+    \item \textbf{Planarity} No two tree edges may be drawn such that they intersect, unless they same a common vertex
+    \item \textbf{Isomorphic Trees Drawn Similarly} If two subtrees are isomorphic, they must be drawn identically (minus a translation)
+\end{enumerate}
+
+It should be noted that aesthetic 1 and 3 imply 5.
+
+\subsection{Formal Description}
+First, define $f$ to be a mapping from a tree's vertex set to $\mathbb{R}^2$. Trivially, we can satisfy Aesthetic 1 by defining $f_y(n) = -i$ where $i$ is the level of node $n$. Then, we use a linear program to determine the value of $f_x(n)$. We will introduce two auxiliary variables $x_{max}$ and $x_{min}$ which give the left and right bounds for the x-coordinates of our drawing respectively. Hence, our goal of creating the narrowest possible drawing may be expressed as 
+\[
+\min{x_{max} - x_{min}}
+\]
+
+subject to:
+
+\[
+\begin{aligned}
+&f_x(n) - f_x( \leftc{n} ) \geq 1 &\text{For all $n$ with left children (Aesthetic 2)} \\
+&f_x( \rightc{n} ) - f_x(n) \geq 1 &\text{For all $n$ with right children (Aesthetic 2)} \\
+&\abs{f_x(n) - f_x(m)} \geq 2 &\text{For all $m, n$ at level $i$ (Aesthetic 3)} \\
+&f_x(\rightc{n}) - f_x(\leftc{n}) &\text{(Aesthetic 4)} \\
+\end{aligned}
+\]
+
+The sixth aesthetic is very difficult to implement, so I will leave it for a later report. \\
 
 \pagebreak
 

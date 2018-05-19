@@ -2,15 +2,29 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <unordered_map>
+#include <memory>
 #include <deque>
+#include <iostream>
+// #include <chrono>
 #include "svg.hpp"
 #include "glpk.h"
 
 struct TreeNode {
     int id;
-    TreeNode* left;
-    TreeNode* right;
+    std::unique_ptr<TreeNode> left = nullptr;
+    std::unique_ptr<TreeNode> right = nullptr;
 };
+
+void full_tree(TreeNode& root, int height) {
+    // Create a full binary tree of height h
+    root.left = std::make_unique<TreeNode>();
+    root.right = std::make_unique<TreeNode>();
+
+    if (height) {
+        full_tree(*(root.left.get()), height - 1);
+        full_tree(*(root.right.get()), height - 1);
+    }
+}
 
 // Map level numbers to lists of nodes at that level
 using LevelMap = std::unordered_map<int, std::vector<TreeNode*>>;
@@ -21,7 +35,7 @@ SVG::SVG draw_tree(glp_prob* P, LevelMap& level) {
     root.style("line").set_attr("stroke", "#000000");
 
     size_t current_level = 0, current_level_index = 0;
-    const double scaling = 100;
+    const double scaling = 50;
 
     // Associated tree pointers with circle objects
     std::unordered_map<TreeNode*, SVG::Circle*> vertices;
@@ -47,13 +61,13 @@ SVG::SVG draw_tree(glp_prob* P, LevelMap& level) {
         // Left
         if (elem.first->left) root.add_child<SVG::Line>(
             *(vertices[elem.first]),
-            *(vertices[elem.first->left])
+            *(vertices[elem.first->left.get()])
         );
 
         // Right
         if (elem.first->right) root.add_child<SVG::Line>(
             *(vertices[elem.first]),
-            *(vertices[elem.first->right])
+            *(vertices[elem.first->right.get()])
         );
     }
 
@@ -62,8 +76,54 @@ SVG::SVG draw_tree(glp_prob* P, LevelMap& level) {
 
 int main()
 {
-    const int num_nodes = 7;
-    int left_sons = 3, right_sons = 3;
+    // Complete binary tree of height 2
+    TreeNode root;
+    full_tree(root, 11);
+
+    // Keep track of all nodes on a given level
+    LevelMap levels;
+
+    // Assign IDs
+    // First item of pair = parent of node, second item = node
+    using NodeInfo = std::pair<TreeNode*, TreeNode*>;
+    std::deque<NodeInfo> children = { std::make_pair(nullptr, &root) };
+
+    // Can't assign to 0; 1 = X, 2 = x
+    int current_id = 3, current_row = 1, current_level = 0;
+
+    // Information for constraint matrix
+    int num_nodes = 0, left_sons = 0, right_sons = 0;
+
+    while (!children.empty()) {
+        NodeInfo current = children.front();
+        auto& current_node = current.second;
+        num_nodes++;
+
+        if ((current_level > 0)) {
+            if (std::find(levels[current_level - 1].begin(), levels[current_level - 1].end(), current.first) == levels[current_level - 1].end()) {
+                current_level++;
+            }
+        }
+
+        current_node->id = current_id;
+        if (current_node->left) {
+            left_sons++;
+            children.push_back(std::make_pair(current_node, current_node->left.get()));
+        }
+        if (current_node->right) {
+            right_sons++;
+            children.push_back(std::make_pair(current_node, current_node->right.get()));
+        }
+
+        // Update mapping of levels to nodes
+        levels[current_level].push_back(current_node);
+
+        // Loop update
+        children.pop_front();
+        current_id++;
+        if (current_level == 0) current_level++;
+    }
+
     int num_constraints = num_nodes * 2 // Width constraint
         + left_sons + right_sons  // 2nd constraint
         + std::min(left_sons, right_sons); // Equal separation
@@ -81,69 +141,34 @@ int main()
     glp_set_obj_coef(P, 1, 1);  // X
     glp_set_obj_coef(P, 2, -1); // -x
 
-    // Complete binary tree of height 2
-    TreeNode root;
-    root.left = new TreeNode();
-    root.right = new TreeNode();
-    
-    root.left->left = new TreeNode();
-    root.left->right = new TreeNode();
+    // Add width constraints: indices refer to X, current_id
+    for (auto& l: levels) {
+        current_level = l.first;
 
-    root.right->left = new TreeNode();
-    root.right->right = new TreeNode();
+        for (auto& elem : l.second) {
+            current_id = elem->id;
+            const int ind_up[] = { NULL, 1, current_id },
+                ind_down[] = { NULL, 2, current_id };
+            const double val[] = { NULL, -1, 1 };
+            glp_set_mat_row(P,
+                current_row,    // Index of constraint
+                2,              // Number of values
+                &(ind_up[0]),   // Indices of values
+                &(val[0])       // Values
+            );
+            current_row++;
+            glp_set_row_bnds(P, current_row, GLP_LO, 0, NULL);
 
-    // Keep track of all nodes on a given level
-    LevelMap levels;
+            glp_set_mat_row(P,
+                current_row,     // Index of constraint
+                2,               // Number of values
+                &(ind_down[0]),  // Indices of values
+                &(val[0])        // Values
+            );
 
-    // Assign IDs
-    // First item of pair = parent of node, second item = node
-    using NodeInfo = std::pair<TreeNode*, TreeNode*>;
-    std::deque<NodeInfo> children = { std::make_pair(nullptr, &root) };
-    int current_id = 3, current_row = 1, current_level = 0; // Can't assign to 0; 1 = X, 2 = x
-
-    while (!children.empty()) {
-        NodeInfo current = children.front();
-        auto& current_node = current.second;
-
-        if ((current_level > 0)) {
-            if (std::find(levels[current_level - 1].begin(), levels[current_level - 1].end(), current.first) == levels[current_level - 1].end()) {
-                current_level++;
-            }
+            current_row++;
+            glp_set_row_bnds(P, current_row, GLP_UP, NULL, 0);
         }
-
-        current_node->id = current_id;
-        if (current_node->left) children.push_back( std::make_pair(current_node, current_node->left) );
-        if (current_node->right) children.push_back( std::make_pair(current_node, current_node->right) );
-
-        // Add to mapping of levels to nodes
-        levels[current_level].push_back(current_node);
-
-        // Also add width constraints: indices refer to X, current_id
-        const int ind_up[] = { NULL, 1, current_id },
-            ind_down[] = { NULL, 2, current_id };
-        const double val[] = { NULL, -1, 1 };
-        glp_set_mat_row(P,
-            current_row, // Index of constraint
-            2,           // Number of values
-            &(ind_up[0]),   // Indices of values
-            &(val[0])    // Values
-        );
-        current_row++;
-        glp_set_row_bnds(P, current_row, GLP_LO, 0, NULL);
-
-        glp_set_mat_row(P,
-            current_row, // Index of constraint
-            2,           // Number of values
-            &(ind_down[0]),   // Indices of values
-            &(val[0])    // Values
-        );
-        current_row++;
-        glp_set_row_bnds(P, current_row, GLP_UP, NULL, 0);
-
-        children.pop_front();
-        current_id++;
-
-        if (current_level == 0) current_level++;
     }
 
     // Calculate 2nd constraint + equal separation constraints
@@ -222,7 +247,7 @@ int main()
 
     // Solve problem
     glp_simplex(P, NULL);
-    glp_print_sol(P, "test.txt");
+    // Print solution to text file glp_print_sol(P, "test.txt");
 
     // Draw tree
     std::ofstream outfile("test.svg");
@@ -231,6 +256,7 @@ int main()
     outfile << (std::string)drawing;
 
     glp_delete_prob(P);
+
     return 0;
 }
 

@@ -40,7 +40,7 @@ namespace tree {
 
     TreeNode full_tree(int height) {
         TreeNode root;
-        helpers::full_tree_helper(root, height);
+        if (height) helpers::full_tree_helper(root, height - 1);
         return root;
     }
 
@@ -138,7 +138,8 @@ namespace tree {
         // Calculate number of constraints
         int num_constraints = num_nodes * 2       // Width constraint
             + left_sons + right_sons              // 2nd constraint
-            + std::min(left_sons, right_sons);    // Equal separation
+            + std::min(left_sons, right_sons)     // Equal separation
+            + 1;                                  // Edge case: Tree of height 0
 
         // Add constraint for each adjacent pair of nodes (aesthetic 3)
         for (auto& l : levels)

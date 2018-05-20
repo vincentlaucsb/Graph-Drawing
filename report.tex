@@ -212,7 +212,7 @@ In the algorithm below, the problem of drawing a tree is formulated as a linear 
     \item \textbf{Isomorphic Trees Drawn Similarly} If two subtrees are isomorphic, they must be drawn identically (minus a translation)
 \end{enumerate}
 
-It should be noted that aesthetic 1 and 3 imply 5.
+It should be noted that aesthetic 1, 2 and 3 imply 5 (see Theorem \ref{tree_lp_planar}).
 
 \subsection{Formal Description}
 First, define $f$ to be a mapping from a tree's vertex set to $\mathbb{R}^2$. Trivially, we can satisfy Aesthetic 1 by defining $f_y(n) = -i$ where $i$ is the level of node $n$. Then, we use a linear program to determine the value of $f_x(n)$. We will introduce two auxiliary variables $x_{max}$ and $x_{min}$ which give the left and right bounds for the x-coordinates of our drawing respectively. Hence, our goal of creating the narrowest possible drawing may be expressed as 
@@ -224,12 +224,13 @@ subject to:
 
 \[
 \begin{aligned}
-&f_x(n) \geq x_{min} \\
-&f_x(n) \leq x_{max} \\
-&f_x(n) - f_x( \leftc{n} ) \geq 1 &\text{For all $n$ with left children (Aesthetic 2)} \\
-&f_x( \rightc{n} ) - f_x(n) \geq 1 &\text{For all $n$ with right children (Aesthetic 2)} \\
-&\abs{f_x(n) - f_x(m)} \geq 2 &\text{For all $m, n$ at level $i$ (Aesthetic 3)} \\
-&f_x(\rightc{n}) - f_x(\leftc{n}) &\text{(Aesthetic 4)} \\
+    &f_x(n) \geq x_{min} \\
+    &f_x(n) \leq x_{max} \\
+    &f_x(n) - f_x( \leftc{n} ) \geq 1 &\text{For all $n$ with a left child (Aesthetic 2)} \\
+    &f_x( \rightc{n} ) - f_x(n) \geq 1 &\text{For all $n$ with a right child (Aesthetic 2)} \\
+    &\abs{f_x(n) - f_x(m)} \geq 2 &\text{For all $m, n$ at level $i$ (Aesthetic 3)} \\
+    &\frac{ f_x(\leftc{n}) + f_x(\rightc{n}) }{2} = f_x(n)
+         &\text{For all $n$ with two children (Aesthetic 4)} \\
 \end{aligned}
 \]
 
@@ -241,13 +242,39 @@ The sixth aesthetic is very difficult to implement, so I will leave it for a lat
     \caption{A drawing of a perfect tree of height 4}
 \end{figure}
 
+\begin{theorem}[Planarity]
+    \label{tree_lp_planar}
+    Let $T$ be any binary tree drawn by this algorithm. Then, aesthetics 1, 2, and 3 imply aesthetic 5.
+    
+    \begin{proof}
+        First, if every node $n$ on some level $i$ is drawn according to the rule $f_y(n) = -i$, then ensuring planarity simply means ensuring nodes on the same level do not cross. We will show via induction on the height of the tree that given aesthetic 1, aesthetics 2 and 3 then imply 5.
+        
+        \bigskip
+        
+        \paragraph{Base Case} Trivially, this algorithm gives a planar drawing for a tree of height 0.
+        
+        % Cheeky
+        \begin{figure}[H]
+            \centering
+            \includegraphics[height=0.5in]{"report/perfect_tree_0".pdf}
+            \caption{The full tree of height 0 as drawn by this algorithm}
+        \end{figure}
+        
+        \paragraph{Inductive Hypothesis} Assuming that the previous $i - 1$ levels of the tree are drawn in a planar fashion, we will show that for any node in the $i^{th}$ level, the edge between it and its parent does not intersection any other edges.
+        
+        \bigskip
+        
+        First, suppose for a contradiction that there is some edge crossing. This implies one of three cases. It may be because some node's right subtree crosses some other node's left subtree. However, this violates aesthetic 3. It may also be since some node's left subtree crosses some other node's left subtree. However, this violates aesthetic 2. Lastly, it may be that some node's right subtree crosses some other node's right subtree. Again, this violates aesthetic 2.
+    \end{proof}
+\end{theorem}
+
 \begin{theorem}[Number of Constraints]
     The number of constraints is $O(n)$.
     
     \begin{proof}
         Let $T$ be a binary tree with $n$ nodes. First, the requirements $x_{min} \leq f_x(n) \leq x_{max}$ contribute $2n$ constraints.
         
-        \paragraph{Aesthetic 2} In any tree, every node minus the root is either a left or right son. Hence, there aesthetic 2 contributes $n - 1$ constraints.
+        \paragraph{Aesthetic 2} For any tree, every node except the root is either a left or right son. Hence, there aesthetic 2 contributes $n - 1$ constraints.
         
         \paragraph{Aesthetic 3} For every level, this aesthetic requires a constraint for every adjacent pair of nodes. There are less pairs than nodes, so this quantity is less than $n$.
         
@@ -260,6 +287,92 @@ The sixth aesthetic is very difficult to implement, so I will leave it for a lat
         Hence, we can see that there are at most $6n$ aesthetic constraints, so the number of constraints is $O(n)$ as required.
     \end{proof}
 \end{theorem}
+
+\subsection{Implementation}
+In this paper, this algorithm was implemented as a C++ program based around the GNU Linear Programming Kit (GLPK)--an open-source linear optimizer based on the simplex method. Each node was represented as a data structure as follows:
+
+\begin{labeling}{alligator}
+    \item [left]  Pointer to left child
+    \item [right] Pointer to right child
+    \item [id]    Corresponding column index of constraint matrix
+\end{labeling}
+
+Then, aesthetics 1-5 could be computed using $2n$ iterations. First, an iterative level-order traversal was used to simultaneously assign IDs to each node, determine the number of left and right sons, and thus, determine the total number of rows and columns in the constraint matrix. During the level-order traversal, a hash table mapping each level of the tree to an array of node pointers was populated (\lstinline{std::unordered_map<int, TreeNode*>}). Then, a final iteration over this auxiliary data structure was used to calculate the aesthetics. (Write about how paper uses a different method).
+
+\bigskip
+
+It should be noted that regardless of method used, computing the required aesthetics requires at least two iterations, where the first iteration is used to assign column indicies to nodes. If the first iteration is a level-order traversal, then we cannot calculate any constraints related to a node's children until a second traversal--since the children do not have column indices assigned. On the other hand, if an initial preorder traversal is used, then we will still need a second iteration to calculate the third aesthetic since we are not aware of all of the nodes on one level during a preorder traversal.
+
+\bigskip
+
+Finally, in order to populate the auxiliary data structure, for every node, we also had to keep track of which level it was on. To accomplish this, during the iterative traversal where children are added to a queue, the current level + 1 was also paired with the child pointers. (Find a better way to word this) The following pseudocode is loosely based on C++ syntax.
+
+\begin{algorithm}[H]
+    \caption{Tree Layout -- Column Index Assignment}
+    \label{tree_lp_initial}
+    \begin{algorithmic}[1]
+        % Begin Describing Algorithm
+        \Procedure{assign\_ids}{$t$}
+        \State Create a queue $children$ initially populated with the pair $(0, root)$ where 0 is the level of root
+        \State $num\_nodes \gets 0$ \Comment{Information for constraint matrix}
+        \State $left\_sons \gets 0$
+        \State $right\_sons \gets 0$
+        \State $current\_id \gets 0$ \Comment{Corresponding column of constraint matrix}
+        \While{$children$ is not empty} \Comment{Level-order traversal}
+        \State Pop the first element from $children$ and assign it to $current$
+        \State $current\_level \gets current.first$
+            \Comment{$current =$ (level (integer), node pointer)}
+        \State $current\_node \gets current.second$
+        \State $current\_node\rightarrow id \gets current\_id$
+            % Left child
+            \If{$current\_node\rightarrow left$ is not null}
+            \State $children \gets (current\_level + 1, root\rightarrow left)$
+            \State $left\_sons \gets left\_sons + 1$ \Comment{Keep count of left sons (aesthetic 2)}
+            \EndIf
+            % Right child
+            \If{$current\_node\rightarrow left$ is not null}
+            \State $children \gets (current\_level + 1, root\rightarrow right)$
+            \State $right\_sons \gets right\_sons + 1$ \Comment{Keep count of right sons (aesthetic 2)}
+            \EndIf
+        \State $levels[current\_level].push\_back(current\_node)$
+            \Comment{Update mapping of levels to their nodes}
+        \State $current\_id \gets current\_id + 1$
+        \EndWhile
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+After the column indices have been assigned, we can then easily calculate aesthetics 1 through 5 using the mapping $levels$ from algorithm \ref{tree_lp_initial}.
+
+\begin{algorithm}[H]
+    \caption{Tree Layout -- Calculating Aesthetics 1-5}
+    \begin{algorithmic}[1]
+        % Begin Describing Algorithm
+        \Procedure{calculate\_constraints}{$levels$}
+        \For{level $l = 0, ..., h$}
+            \For{node $i = 0, ..., m$} \Comment{Iterate over nodes at level $l$, where $m$ is the number of nodes at level $l$}
+            \State Let $current\_node$ refer to $levels[l][i]$ (the $i^{th}$ node at level $l$)
+            \State Add constraint $current\_node \leq x_{max}$ \Comment{Add width constraints}
+            \State Add constraint $current\_node \geq x_{min}$
+            \If{$current\_node \rightarrow left$ is not null}
+                \State Add second constraint
+            \EndIf
+            \If{$current\_node \rightarrow right$ is not null}
+                \State Add second constraint
+            \EndIf
+            \If{$current\_node \rightarrow left$ and $current\_node \rightarrow right$ are not null}
+                \State (Add parent centered constraint)
+            \EndIf
+            \If{$i < n$}
+                \State Add separation constraint
+            \EndIf
+            \EndFor
+        \EndFor
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+Thus, calculating the first five aesthetics can be done in linear time by iterating over each node just twice.
 
 \pagebreak
 

@@ -1,0 +1,10 @@
+<svg height="40.0" viewBox="-20.0 -20.0 40.0 40.0" width="40.0" xmlns="http://www.w3.org/2000/svg">
+	<style type="text/css">
+		<![CDATA[
+			line {
+				stroke: #000000;
+			}
+		]]>
+	</style>
+	<circle cx="0.0" cy="0.0" r="10.0" />
+</svg>

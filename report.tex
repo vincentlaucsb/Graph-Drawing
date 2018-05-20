@@ -224,6 +224,8 @@ subject to:
 
 \[
 \begin{aligned}
+&f_x(n) \geq x_{min} \\
+&f_x(n) \leq x_{max} \\
 &f_x(n) - f_x( \leftc{n} ) \geq 1 &\text{For all $n$ with left children (Aesthetic 2)} \\
 &f_x( \rightc{n} ) - f_x(n) \geq 1 &\text{For all $n$ with right children (Aesthetic 2)} \\
 &\abs{f_x(n) - f_x(m)} \geq 2 &\text{For all $m, n$ at level $i$ (Aesthetic 3)} \\
@@ -232,6 +234,32 @@ subject to:
 \]
 
 The sixth aesthetic is very difficult to implement, so I will leave it for a later report. \\
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{"report/full_tree".pdf}
+    \caption{A drawing of a perfect tree of height 4}
+\end{figure}
+
+\begin{theorem}[Number of Constraints]
+    The number of constraints is $O(n)$.
+    
+    \begin{proof}
+        Let $T$ be a binary tree with $n$ nodes. First, the requirements $x_{min} \leq f_x(n) \leq x_{max}$ contribute $2n$ constraints.
+        
+        \paragraph{Aesthetic 2} In any tree, every node minus the root is either a left or right son. Hence, there aesthetic 2 contributes $n - 1$ constraints.
+        
+        \paragraph{Aesthetic 3} For every level, this aesthetic requires a constraint for every adjacent pair of nodes. There are less pairs than nodes, so this quantity is less than $n$.
+        
+        \paragraph{Aesthetic 4} For any tree, there are less parents than total nodes, so this aesthetic requires no more than $n$ constraints.
+        
+        \paragraph{Aesthetic 6} There are at most $\frac{n}{2}$ equivalence classes with more than one member, so this constraint contributes no more than $\frac{n}{2}$ constraints.
+        
+        \bigskip
+        
+        Hence, we can see that there are at most $6n$ aesthetic constraints, so the number of constraints is $O(n)$ as required.
+    \end{proof}
+\end{theorem}
 
 \pagebreak
 

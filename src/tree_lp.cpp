@@ -1,33 +1,54 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <algorithm>
-#include <unordered_map>
-#include <memory>
-#include <deque>
-#include <iostream>
-// #include <chrono>
-#include "cxxopts.hpp"
-#include "svg.hpp"
-#include "glpk.h"
+#include "tree_lp.h"
 
 namespace tree {
-    struct TreeNode {
-        int id;
-        std::unique_ptr<TreeNode> left = nullptr;
-        std::unique_ptr<TreeNode> right = nullptr;
-    };
+    size_t TreeNode::height() {
+        size_t l_height = 0, r_height = 0;
+        if (left) l_height = left->height();
+        if (right) r_height = right->height();
+        return std::max(l_height + 1, r_height + 1);
+    }
 
-    // Map level numbers to lists of nodes at that level
-    using LevelMap = std::unordered_map<int, std::vector<TreeNode*>>;
+    namespace helpers {
+        void full_tree_helper(TreeNode& node, int height) {
+            // Create a full binary tree of height h
+            node.left = std::make_unique<TreeNode>();
+            node.right = std::make_unique<TreeNode>();
 
-    void full_tree(TreeNode& root, int height) {
-        // Create a full binary tree of height h
-        root.left = std::make_unique<TreeNode>();
-        root.right = std::make_unique<TreeNode>();
+            if (height) {
+                full_tree_helper(*(node.left.get()), height - 1);
+                full_tree_helper(*(node.right.get()), height - 1);
+            }
+        };
 
-        if (height) {
-            full_tree(*(root.left.get()), height - 1);
-            full_tree(*(root.right.get()), height - 1);
+        TreeNode IncompleteBinaryTree::make_tree(int depth) {
+            TreeNode tree;
+            make_tree(tree, depth);
+            return tree;
+        }
+
+        void IncompleteBinaryTree::make_tree(TreeNode& tree, int depth) {
+            // Generate an incomplete binary tree recursively
+            if (depth) {
+                auto lchance = distribution(generator), rchance = distribution(generator);
+                if (lchance > 0.5) tree.left = std::make_unique<TreeNode>();
+                if (rchance > 0.5) tree.right = std::make_unique<TreeNode>();
+                if (tree.left) this->make_tree(*(tree.left.get()), depth - 1);
+                if (tree.right) this->make_tree(*(tree.right.get()), depth - 1);
+            }
+        }
+    }
+
+    TreeNode full_tree(int height) {
+        TreeNode root;
+        helpers::full_tree_helper(root, height);
+        return root;
+    }
+
+    TreeNode incomplete_tree(int height) {
+        helpers::IncompleteBinaryTree tree_maker;
+        while (true) {
+            auto tree = tree_maker.make_tree(height);
+            if (tree.height() >= height) return tree;
         }
     }
 
@@ -79,10 +100,10 @@ namespace tree {
     std::pair<glp_prob*, LevelMap> map_tree(TreeNode& root) {
         LevelMap levels; // Keep track of all nodes on a given level
 
-        // Assign IDs
-        // First item of pair = parent of node, second item = node
-        using NodeInfo = std::pair<TreeNode*, TreeNode*>;
-        std::deque<NodeInfo> children = { std::make_pair(nullptr, &root) };
+        // Assign IDs (can't calculate any constraints before specifying IDs)
+        using Level = int;
+        using NodeInfo = std::pair<Level, TreeNode*>; // Level of node + node itself
+        std::deque<NodeInfo> children = { std::make_pair(0, &root) };
 
         // Can't assign to 0; 1 = X, 2 = x
         int current_id = 3, current_row = 1, current_level = 0;
@@ -93,22 +114,17 @@ namespace tree {
         while (!children.empty()) {
             NodeInfo current = children.front();
             auto& current_node = current.second;
+            current_level = current.first;
             num_nodes++;
 
-            if ((current_level > 0)) {
-                if (std::find(levels[current_level - 1].begin(), levels[current_level - 1].end(), current.first) == levels[current_level - 1].end()) {
-                    current_level++;
-                }
-            }
-
-            current_node->id = current_id;
+            current_node->id = current_id; // Assign ID to node
             if (current_node->left) {
                 left_sons++;
-                children.push_back(std::make_pair(current_node, current_node->left.get()));
+                children.push_back(std::make_pair(current_level + 1, current_node->left.get()));
             }
             if (current_node->right) {
                 right_sons++;
-                children.push_back(std::make_pair(current_node, current_node->right.get()));
+                children.push_back(std::make_pair(current_level + 1, current_node->right.get()));
             }
 
             // Update mapping of levels to nodes
@@ -117,12 +133,16 @@ namespace tree {
             // Loop update
             children.pop_front();
             current_id++;
-            if (current_level == 0) current_level++;
         }
 
-        int num_constraints = num_nodes * 2 // Width constraint
-            + left_sons + right_sons  // 2nd constraint
-            + std::min(left_sons, right_sons); // Equal separation
+        // Calculate number of constraints
+        int num_constraints = num_nodes * 2       // Width constraint
+            + left_sons + right_sons              // 2nd constraint
+            + std::min(left_sons, right_sons);    // Equal separation
+
+        // Add constraint for each adjacent pair of nodes (aesthetic 3)
+        for (auto& l : levels)
+            if (l.second.size() > 1) num_constraints += l.second.size() - 1;
 
         glp_prob *P;
         P = glp_create_prob();
@@ -137,39 +157,32 @@ namespace tree {
         glp_set_obj_coef(P, 1, 1);  // X
         glp_set_obj_coef(P, 2, -1); // -x
 
-                                    // Add width constraints: indices refer to X, current_id
         for (auto& l : levels) {
             current_level = l.first;
 
-            for (auto& elem : l.second) {
-                current_id = elem->id;
+            for (auto& node : l.second) {
+                // Add width constraints: indices refer to X, current_id
+                current_id = node->id;
                 const int ind_up[] = { NULL, 1, current_id },
                     ind_down[] = { NULL, 2, current_id };
                 const double val[] = { NULL, -1, 1 };
                 glp_set_mat_row(P,
-                    current_row,    // Index of constraint
+                    current_row++,  // Index of constraint
                     2,              // Number of values
                     &(ind_up[0]),   // Indices of values
                     &(val[0])       // Values
                 );
-                current_row++;
                 glp_set_row_bnds(P, current_row, GLP_LO, 0, NULL);
 
                 glp_set_mat_row(P,
-                    current_row,     // Index of constraint
+                    current_row++,   // Index of constraint
                     2,               // Number of values
                     &(ind_down[0]),  // Indices of values
                     &(val[0])        // Values
                 );
-
-                current_row++;
                 glp_set_row_bnds(P, current_row, GLP_UP, NULL, 0);
-            }
-        }
 
-        // Calculate 2nd constraint + equal separation constraints
-        for (auto& l : levels) {
-            for (auto& node : l.second) {
+                // Calculate 2nd constraint (all left children strictly left of parent)
                 if (node->left) {
                     const int ind[] = { NULL, node->id, node->left->id };
                     const double val[] = { NULL, 1, -1 };
@@ -180,10 +193,10 @@ namespace tree {
                         &(ind[0]),   // Indices of values
                         &(val[0])    // Values
                     );
-                    glp_set_row_bnds(P, current_row, GLP_LO, 1, 0);
-                    current_row++;
+                    glp_set_row_bnds(P, current_row++, GLP_LO, 1, 0);
                 }
 
+                // All right children strictly right of parent
                 if (node->right) {
                     const int ind[] = { NULL, node->id, node->right->id };
                     const double val[] = { NULL, -1, 1 };
@@ -194,11 +207,10 @@ namespace tree {
                         &(ind[0]),   // Indices of values
                         &(val[0])    // Values
                     );
-                    glp_set_row_bnds(P, current_row, GLP_LO, 1, 0);
-                    current_row++;
+                    glp_set_row_bnds(P, current_row++, GLP_LO, 1, 0);
                 }
 
-                // Equal separation
+                // Equal separation (parent centered over child)
                 if (node->left && node->right) {
                     const int ind[] = { NULL, node->id, node->left->id, node->right->id };
                     const double val[] = { NULL, -2, 1, 1 };
@@ -209,17 +221,12 @@ namespace tree {
                         &(ind[0]),   // Indices of values
                         &(val[0])    // Values
                     );
-                    glp_set_row_bnds(P, current_row, GLP_FX, 0, 0);
-                    current_row++;
+                    glp_set_row_bnds(P, current_row++, GLP_FX, 0, 0);
                 }
             }
-        }
 
-        // Calculate separation constraints
-        for (auto& l : levels) {
-            // Add correct number of rows
+            // Calculate separation constraints
             if (l.second.size() - 1) {
-                glp_add_rows(P, l.second.size() - 1); // For each adjacent pair of nodes
                 int first_id = l.second.front()->id, second_id = l.second.back()->id;
                 for (int i = first_id; i < second_id; i++) {
                     const int ind[] = { NULL, i, i + 1 };
@@ -231,9 +238,7 @@ namespace tree {
                         &(ind[0]),   // Indices of values
                         &(val[0])    // Values
                     );
-                    glp_set_row_bnds(P, current_row, GLP_LO, 2, NULL);
-
-                    current_row++;
+                    glp_set_row_bnds(P, current_row++, GLP_LO, 2, NULL);
                 }
             }
         }
@@ -250,6 +255,8 @@ int main(int argc, char** argv) {
     options.add_options("required")
         ("f,file", "output file", cxxopts::value<std::string>())
         ("d,depth", "depth", cxxopts::value<int>());
+    options.add_options("optional")
+        ("i,incomp", "Produce an incomplete tree");
     options.parse_positional({ "file", "depth" });
 
     if (argc < 3) {
@@ -262,9 +269,11 @@ int main(int argc, char** argv) {
 
         std::string file = result["file"].as<std::string>();
         int depth = result["depth"].as<int>();
+        bool incomp = result["incomp"].as<bool>();
 
         TreeNode root;
-        full_tree(root, depth);
+        if (incomp) root = incomplete_tree(depth);
+        else root = full_tree(depth);
 
         auto mapping = map_tree(root);
         SVG::SVG drawing = draw_tree(mapping.first, mapping.second);

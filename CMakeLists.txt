@@ -78,3 +78,6 @@ add_executable(tree_paper src/tree.cpp src/tree_paper.cpp src/tree_draw.cpp)
 ## tree_lp
 add_executable(tree_lp src/tree_lp.cpp)
 target_link_libraries(tree_lp glpk)
+
+add_executable(tree_test src/tree_lp.cpp tests/tree_tests.cpp)
+target_link_libraries(tree_test glpk)

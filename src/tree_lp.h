@@ -18,12 +18,18 @@ namespace tree {
         int id;
         std::unique_ptr<TreeNode> left = nullptr;
         std::unique_ptr<TreeNode> right = nullptr;
+        size_t size();
         size_t height();
     };
 
     // Map level numbers to lists of nodes at that level
     using LevelMap = std::unordered_map<int, std::vector<TreeNode*>>;
 
+    double factorial(const int n);
+    int binary_trees(int n);
+    int g_jn(int j, int n);
+
+    int rank(TreeNode* tree);
     TreeNode full_tree(int height);
     TreeNode incomplete_tree(int height);
     SVG::SVG draw_tree(glp_prob* P, LevelMap& level);

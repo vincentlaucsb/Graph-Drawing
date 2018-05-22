@@ -8,6 +8,50 @@ namespace tree {
         return std::max(l_height + 1, r_height + 1);
     }
 
+    size_t TreeNode::size() {
+        // Return the number of nodes in the tree
+        size_t nodes = 1; // Count self
+        if (this->left) nodes += left->size();
+        if (this->right) nodes += right->size();
+        return nodes;
+    }
+
+    double factorial(const int n) {
+        // Calculate n!
+        int ret = 1;
+        for (int i = 1; i <= n; i++) ret *= i;
+        return ret;
+    }
+
+    int binary_trees(int n) {
+        // Return the number of binary trees with n nodes
+        return (factorial(2 * n) / pow(factorial(n), 2)) // 2n choose n
+            / (double)(n + 1);
+    }
+
+    int g_jn(int j, int n) {
+        // Return the number of binary trees with n nodes whose left-subtree has j nodes
+        if (n == 0) {
+            if (j == 0) return 1;
+            else return 0;
+        }
+
+        return binary_trees(j) * binary_trees(n - j - 1);
+    }
+
+    int rank(TreeNode* tree) {
+        // Calculate the rank of a tree
+        if (!tree) return 1;
+
+        int right_tree_size = tree->right ? (int)tree->right->size() : 0;
+        int ret = (binary_trees(right_tree_size) * (rank(tree->left.get()) - 1)) + rank(tree->right.get());
+
+        for (int j = 0; tree->left && j < tree->left->size(); j++)
+            ret += g_jn(j, (int)tree->size());
+
+        return ret;
+    }
+
     namespace helpers {
         void full_tree_helper(TreeNode& node, int height) {
             // Create a full binary tree of height h
@@ -248,7 +292,7 @@ namespace tree {
         return std::make_pair(P, levels);
     }
 }
-
+/**
 int main(int argc, char** argv) {
     using namespace tree;
     cxxopts::Options options(argv[0], "Produces a full tree of specified depth");
@@ -290,5 +334,5 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-
+*/
 /* eof */

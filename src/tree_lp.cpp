@@ -1,6 +1,46 @@
 #include "tree_lp.h"
 
 namespace tree {
+    TreeNode fig2();
+    TreeNode fig2() {
+        /** Replicate figure 2 from RT81 */
+        TreeNode root;
+
+        // Left subtree
+        auto& d1_left = root.left = std::make_unique<TreeNode>();
+        auto& d2_left = d1_left->left = std::make_unique<TreeNode>();
+        d1_left->right = std::make_unique<TreeNode>();
+        auto& d3_left = d2_left->left = std::make_unique<TreeNode>();
+        d2_left->right = std::make_unique<TreeNode>();
+        auto& d4_left = d3_left->left = std::make_unique<TreeNode>();
+        d3_left->right = std::make_unique<TreeNode>();
+        d4_left->left = std::make_unique<TreeNode>();
+        auto& d5_right = d4_left->right = std::make_unique<TreeNode>();
+        d5_right->left = std::make_unique<TreeNode>();
+        auto& d6_right = d5_right->right = std::make_unique<TreeNode>();
+        auto& d7_left = d6_right->right = std::make_unique<TreeNode>();
+        d7_left->left = std::make_unique<TreeNode>();
+        d7_left->right = std::make_unique<TreeNode>();
+
+        // Right subtree
+        auto& d1_right = root.right = std::make_unique<TreeNode>();
+        auto& d2_right = d1_right->right = std::make_unique<TreeNode>();
+        d1_right->left = std::make_unique<TreeNode>();
+        auto& d3_right = d2_right->right = std::make_unique<TreeNode>();
+        d2_right->left = std::make_unique<TreeNode>();
+        auto& d4_right = d3_right->right = std::make_unique<TreeNode>();
+        d3_right->left = std::make_unique<TreeNode>();
+        d4_right->right = std::make_unique<TreeNode>();
+        auto& d5_left = d4_right->left = std::make_unique<TreeNode>();
+        d5_left->right = std::make_unique<TreeNode>();
+        auto& d6_left = d5_left->left = std::make_unique<TreeNode>();
+        auto& d7_right = d6_left->left = std::make_unique<TreeNode>();
+        d7_right->left = std::make_unique<TreeNode>();
+        d7_right->right = std::make_unique<TreeNode>();
+
+        return root;
+    }
+
     size_t TreeNode::height() {
         size_t l_height = 0, r_height = 0;
         if (left) l_height = left->height();
@@ -39,16 +79,25 @@ namespace tree {
         return binary_trees(j) * binary_trees(n - j - 1);
     }
 
-    int rank(TreeNode* tree) {
+    int rank(TreeNode* tree, RankMap* cache) {
         // Calculate the rank of a tree
-        if (!tree) return 1;
+        // If cache is not null, also save computations there
 
-        int right_tree_size = tree->right ? (int)tree->right->size() : 0;
-        int ret = (binary_trees(right_tree_size) * (rank(tree->left.get()) - 1)) + rank(tree->right.get());
+        int ret = 0;
+        if (!tree) ret = 1;
+        else {
+            int right_tree_size = tree->right ? (int)tree->right->size() : 0;
+            ret = (binary_trees(right_tree_size)
+                * (rank(tree->left.get(), cache) - 1))
+                + rank(tree->right.get(), cache);
 
-        for (int j = 0; tree->left && j < tree->left->size(); j++)
-            ret += g_jn(j, (int)tree->size());
+            for (int j = 0; tree->left && j < tree->left->size(); j++)
+                ret += g_jn(j, (int)tree->size());
+        }
 
+        if (cache && tree && tree->size() > 1
+            && ret > 0 // Why is rank = 0 in some cases?!?
+        ) (*cache)[(int)tree->size()][ret].push_back(tree);
         return ret;
     }
 
@@ -141,7 +190,7 @@ namespace tree {
         return root;
     }
 
-    std::pair<glp_prob*, LevelMap> map_tree(TreeNode& root) {
+    std::pair<glp_prob*, LevelMap> map_tree(TreeNode& root, bool aes6) {
         LevelMap levels; // Keep track of all nodes on a given level
 
         // Assign IDs (can't calculate any constraints before specifying IDs)
@@ -185,9 +234,21 @@ namespace tree {
             + std::min(left_sons, right_sons)     // Equal separation
             + 1;                                  // Edge case: Tree of height 0
 
+
         // Add constraint for each adjacent pair of nodes (aesthetic 3)
         for (auto& l : levels)
             if (l.second.size() > 1) num_constraints += l.second.size() - 1;
+
+        // Add constraints for isomorphic trees (aesthetic 6)
+        RankMap cache;
+        rank(&root, &cache);
+
+        for (auto& node_size : cache) {
+            for (auto& nodes : node_size.second) {
+                std::cout << "Adding " << (nodes.second.size() - 1) << " aesthetics" << std::endl;
+                num_constraints += (nodes.second.size() - 1);
+            }
+        }
 
         glp_prob *P;
         P = glp_create_prob();
@@ -288,11 +349,51 @@ namespace tree {
             }
         }
 
+        // Sixth aesthetic
+        if (aes6) {
+            for (auto& node_size : cache) {
+                for (auto& nodes : node_size.second) {
+                    for (size_t i = 0; (i + 1) < nodes.second.size(); i++) {
+                        auto& r1 = nodes.second[i], r2 = nodes.second[i + 1];
+
+                        if (r1->right) {
+                            const int ind[] = { NULL,
+                                r1->right->id, r1->id,  r2->right->id, r2->id
+                            };
+                            const double val[] = { NULL, 1, -1, -1, 1 };
+
+                            glp_set_mat_row(P,
+                                current_row, // Index of constraint
+                                4,           // Number of values
+                                &(ind[0]),   // Indices of values
+                                &(val[0])    // Values
+                            );
+                            glp_set_row_bnds(P, current_row++, GLP_FX, 0, 0);
+                        }
+                        else {
+                            const int ind[] = { NULL,
+                                r1->left->id, r1->id,  r2->left->id, r2->id
+                            };
+                            const double val[] = { NULL, 1, -1, -1, 1 };
+
+                            glp_set_mat_row(P,
+                                current_row, // Index of constraint
+                                4,           // Number of values
+                                &(ind[0]),   // Indices of values
+                                &(val[0])    // Values
+                            );
+                            glp_set_row_bnds(P, current_row++, GLP_FX, 0, 0);
+                        }
+                    }
+                }
+            }
+        }
+
         glp_simplex(P, NULL); // Solve problem with default settings
         return std::make_pair(P, levels);
     }
 }
-/**
+
 int main(int argc, char** argv) {
     using namespace tree;
     cxxopts::Options options(argv[0], "Produces a full tree of specified depth");
@@ -320,12 +421,16 @@ int main(int argc, char** argv) {
         if (incomp) root = incomplete_tree(depth);
         else root = full_tree(depth);
 
-        auto mapping = map_tree(root);
+        auto mapping = map_tree(root), mapping_noaes6 = map_tree(root, false);
         SVG::SVG drawing = draw_tree(mapping.first, mapping.second);
+        SVG::SVG drawing_noaes6 = draw_tree(mapping_noaes6.first, mapping_noaes6.second);
         drawing.autoscale();
+        drawing_noaes6.autoscale();
 
         std::ofstream outfile(file);
+        std::ofstream outfile2("noaes6_" + file);
         outfile << std::string(drawing);
+        outfile2 << std::string(drawing_noaes6);
     }
     catch (cxxopts::OptionException&) {
         std::cout << options.help({ "optional" }) << std::endl;
@@ -334,5 +439,4 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-*/
 /* eof */

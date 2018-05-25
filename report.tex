@@ -196,7 +196,7 @@ The figures below show the displacements set by the algorithm for each node. Fro
 \end{figure}
 \fi
 
-\section{Tree Drawing as a Linear Program -- Supowit and Reingold (1981)}
+\section{Tree Drawing as a Linear Program -- Supowit and Reingold (1983)}
 \subsection{The Problem of Narrow Trees}
 Unfortunately, as shown earlier (note to self: show earlier), locally minimizing the width of every subtree does not achieve the goal of a minimum width drawing. Sometimes in order to draw a tree as narrow as possible, some subtrees have to be drawn non-optimally.
 
@@ -234,7 +234,17 @@ subject to:
 \end{aligned}
 \]
 
-The sixth aesthetic is very difficult to implement, so I will leave it for a later report. \\
+Lastly, to implement aesthetic 6, for every node in the tree, we determine its rank and the number of in the subtree rooted at that node. Hence, we can partition every node in the tree into an equivalence classes where we say--for any nodes $m, n$--$m$ is equivalent to $n$ if they have the same size and rank. Then, for each equivalence class with more than one member, we require the constraints. Let $\{ n_1, n_2, ..., n_k \}$ be the members of some equivalence class. Then, we require the constraints
+
+\begin{equation}
+    f_x( \rightc{n_i} ) - f_x(n_i) = f_x( \rightc{n_{i + 1}} ) - f_x( n_{i + 1} )
+\end{equation}
+
+\begin{equation}
+    f_x( n_i ) - f_x( \leftc{n_i} ) = f_x( n_{i + 1} ) - f_x( \leftc{n_{i+1}} )
+\end{equation}
+
+Because, corresponding subtrees in isomorphic trees are also isomorphic, the equations above are sufficient to satisfy Aesthetic 6. (Reword this)
 
 \begin{figure}[H]
     \centering
@@ -264,7 +274,29 @@ The sixth aesthetic is very difficult to implement, so I will leave it for a lat
         
         \bigskip
         
-        First, suppose for a contradiction that there is some edge crossing. This implies one of three cases. It may be because some node's right subtree crosses some other node's left subtree. However, this violates aesthetic 3. It may also be since some node's left subtree crosses some other node's left subtree. However, this violates aesthetic 2. Lastly, it may be that some node's right subtree crosses some other node's right subtree. Again, this violates aesthetic 2.
+        First, suppose for a contradiction that there is some edge crossing. This implies one of three cases. It may be because some node's right subtree crosses some other node's left subtree or vice-versa.
+        
+        \begin{figure}[H]
+            \centering
+            \includegraphics[height=0.5in]{"report/planarity_cx1".pdf}
+            \caption{A right subtree crossing with a left subtree}
+        \end{figure}
+        
+        However, this implies a violation of aesthetic 3. It may also be since some node's left subtree crosses some other node's left subtree. However, either implies the subtrees are drawn directly on top of each other (a violation of aesthetic 2), or that a ``left'' subtree is drawn to the right of its parent, which is a violation of aesthetic 3.
+        
+        \begin{figure}[H]
+            \centering
+            \includegraphics[height=0.5in]{"report/planarity_cx2".pdf}
+            \caption{Here, two ``left'' subtrees (colored in red) cross each other}
+        \end{figure}
+        
+        Lastly, it may be that some node's right subtree crosses some other node's right subtree. But, with logic similar to the case above, this either implies a violation of aesthetic 2 or 3.
+        
+        \begin{figure}[H]
+            \centering
+            \includegraphics[height=0.5in]{"report/planarity_cx3".pdf}
+            \caption{Here, two ``right'' subtrees (colored in blue) cross each other}
+        \end{figure}
     \end{proof}
 \end{theorem}
 
@@ -272,7 +304,7 @@ The sixth aesthetic is very difficult to implement, so I will leave it for a lat
     The number of constraints is $O(n)$.
     
     \begin{proof}
-        Let $T$ be a binary tree with $n$ nodes. First, the requirements $x_{min} \leq f_x(n) \leq x_{max}$ contribute $2n$ constraints.
+        Let $T$ be a binary tree with $n$ nodes. First, the requirements $x_{min} \leq f_x(n)$ and $f_x(n) \leq x_{max}$ contribute $2n$ constraints.
         
         \paragraph{Aesthetic 2} For any tree, every node except the root is either a left or right son. Hence, there aesthetic 2 contributes $n - 1$ constraints.
         
@@ -280,13 +312,44 @@ The sixth aesthetic is very difficult to implement, so I will leave it for a lat
         
         \paragraph{Aesthetic 4} For any tree, there are less parents than total nodes, so this aesthetic requires no more than $n$ constraints.
         
-        \paragraph{Aesthetic 6} There are at most $\frac{n}{2}$ equivalence classes with more than one member, so this constraint contributes no more than $\frac{n}{2}$ constraints.
+        \paragraph{Aesthetic 6} There less than $\frac{n}{2}$ equivalence classes (excluding the equivalence class of leaves) with more than one member, so this constraint contributes no more than $\frac{n}{2}$ constraints.
         
         \bigskip
         
         Hence, we can see that there are at most $6n$ aesthetic constraints, so the number of constraints is $O(n)$ as required.
     \end{proof}
 \end{theorem}
+
+\begin{corollary}[Number of Constraints of a Perfect Tree]
+    
+    \begin{proof}
+        To begin, in a perfect binary tree, the number of nodes at every level doubles. Hence, in a perfect tree of height $h$, there are 
+        $\sum_{i=0}^h 2^i$ nodes. Because all of the constraints are somehow related to this number, we'll denote this quantity as $t$.
+        
+        \paragraph{Width Constraints} For every node in the tree, a pair of constraints is required for the auxiliary variables $x_{max}$ and $x_{min}$. Hence, there are $2t$ of these constraints.
+        
+        \paragraph{Aesthetic 2} Every node in the tree except the root is either a left or a right son, so this aesthetic requires $t - 1$ constraints.
+        
+        \paragraph{Aesthetic 3} For each level in this tree with $k > 1$ nodes (i.e. every level except the one containing the root), this constraints necessitates $k - 1$ constraints. Hence, we need 
+        \[
+            (2^1 - 1) + (2^2 - 1) + ... + (2^h - 1) = t - (h + 1)
+        \]
+        
+        constraints to satisfy this aesthetic.
+        
+        \paragraph{Aesthetic 4} Every node in a perfect tree except for those at the last level have two children, hence we need
+        \[
+            2^0 + 2^1 + ... + 2^{h-1} = t - 2^h
+        \]
+        constraints to satisfy this aesthetic.
+        
+        \paragraph{Aesthetic 6} For any given level, every node in that level is isomorphic to other nodes in that level. In other words, each level of the perfect tree except for the root forms an equivalence class. Recall, for the purpose of aesthetic 6 we ignore every leaf node. Hence, the equivalence classes are composed of every node in the tree except for the root and last level. For each level, we add a constraint for every pair of adjacent nodes. Hence, we need
+        \[
+            (2^1 - 1) + ... + (2^{h - 1} - 1) = t - (2^h + h + 1)
+        \]
+        constraints for this aesthetic.
+    \end{proof}
+\end{corollary}
 
 \subsection{Implementation}
 In this paper, this algorithm was implemented as a C++ program based around the GNU Linear Programming Kit (GLPK)--an open-source linear optimizer based on the simplex method. Each node was represented as a data structure as follows:
@@ -373,6 +436,27 @@ After the column indices have been assigned, we can then easily calculate aesthe
 \end{algorithm}
 
 Thus, calculating the first five aesthetics can be done in linear time by iterating over each node just twice.
+
+\subsection{Aesthetic 6 -- Drawing Isomorphic Trees Identically}
+As mentioned by the paper's authors, there is some debate about whether or not this should be considered an aesthetic. However, sometimes visualizations are used to find recurring patterns, and enforcing this aesthetic allows humans to more effectively use their pattern recognition abilities. In Figure \ref{fig:aes6_on_off}, the same tree is drawn twice by this algorithm, where aesthetic 6 is relaxed in the first drawing.
+
+\begin{figure}[H]
+    \label{fig:aes6_on_off}
+    \begin{subfigure}{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{"report/no_aes6_20".pdf}
+        \caption{An incomplete tree of height 20 as drawn by this algorithm satisfying aesthetics 1-5}
+    \end{subfigure}
+    
+    \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{"report/aes6_20".pdf}
+    \caption{An incomplete tree of height 20 as drawn by this algorithm satisfying aesthetics 1-6}
+    \end{subfigure}
+\end{figure}
+
+\subsubsection{Rank of a Tree}
+In order to efficiently draw isomorphic trees identically, we define a function $rank()$ which assigns a unique integer to every binary tree. For even $n$, there are $B_n = \frac{ \binom{2n}{n} }{ n + 1 }$ different binary trees.
 
 \pagebreak
 
@@ -895,4 +979,22 @@ with
     -51.49 \\
     \end{bmatrix} 
 \]
+
+\begin{thebibliography}{9}
+    \bibitem{latexcompanion} 
+    Michel Goossens, Frank Mittelbach, and Alexander Samarin. 
+    \textit{The \LaTeX\ Companion}. 
+    Addison-Wesley, Reading, Massachusetts, 1993.
+    
+    \bibitem{einstein} 
+    Albert Einstein. 
+    \textit{Zur Elektrodynamik bewegter K{\"o}rper}. (German) 
+    [\textit{On the electrodynamics of moving bodies}]. 
+    Annalen der Physik, 322(10):891–921, 1905.
+    
+    \bibitem{knuthwebsite} 
+    Knuth: Computers and Typesetting,
+    \\\texttt{http://www-cs-faculty.stanford.edu/\~{}uno/abcde.html}
+\end{thebibliography}
+
 \end{document}

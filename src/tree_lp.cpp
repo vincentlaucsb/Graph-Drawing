@@ -1,7 +1,7 @@
 #include "tree_lp.h"
+#include "bst.hpp"
 
 namespace tree {
-    TreeNode fig2();
     TreeNode fig2() {
         /** Replicate figure 2 from RT81 */
         TreeNode root;
@@ -190,7 +190,7 @@ namespace tree {
         return root;
     }
 
-    std::pair<glp_prob*, LevelMap> map_tree(TreeNode& root, bool aes6) {
+    std::pair<glp_prob*, LevelMap> map_tree(TreeNode& root, const TreeOptions& options) {
         LevelMap levels; // Keep track of all nodes on a given level
 
         // Assign IDs (can't calculate any constraints before specifying IDs)
@@ -244,10 +244,8 @@ namespace tree {
         rank(&root, &cache);
 
         for (auto& node_size : cache) {
-            for (auto& nodes : node_size.second) {
-                std::cout << "Adding " << (nodes.second.size() - 1) << " aesthetics" << std::endl;
+            for (auto& nodes : node_size.second)
                 num_constraints += (nodes.second.size() - 1);
-            }
         }
 
         glp_prob *P;
@@ -262,6 +260,9 @@ namespace tree {
         glp_set_obj_dir(P, GLP_MIN);
         glp_set_obj_coef(P, 1, 1);  // X
         glp_set_obj_coef(P, 2, -1); // -x
+
+        // Counts for constraints
+        int width_aux_count = 0, aes2_count = 0, aes3_count = 0, aes4_count = 0, aes6_count = 0;
 
         for (auto& l : levels) {
             current_level = l.first;
@@ -279,6 +280,9 @@ namespace tree {
                     &(val[0])       // Values
                 );
                 glp_set_row_bnds(P, current_row, GLP_LO, 0, NULL);
+                glp_set_row_name(P, current_row,
+                    ("Width auxiliary variable " + std::to_string(++width_aux_count)).c_str()
+                );
 
                 glp_set_mat_row(P,
                     current_row++,   // Index of constraint
@@ -287,6 +291,9 @@ namespace tree {
                     &(val[0])        // Values
                 );
                 glp_set_row_bnds(P, current_row, GLP_UP, NULL, 0);
+                glp_set_row_name(P, current_row,
+                    ("Width auxiliary variable " + std::to_string(++width_aux_count)).c_str()
+                );
 
                 // Calculate 2nd constraint (all left children strictly left of parent)
                 if (node->left) {
@@ -298,6 +305,9 @@ namespace tree {
                         2,           // Number of values
                         &(ind[0]),   // Indices of values
                         &(val[0])    // Values
+                    );
+                    glp_set_row_name(P, current_row,
+                        ("Aesthetic 2 (left children) " + std::to_string(++aes2_count)).c_str()
                     );
                     glp_set_row_bnds(P, current_row++, GLP_LO, 1, 0);
                 }
@@ -313,6 +323,9 @@ namespace tree {
                         &(ind[0]),   // Indices of values
                         &(val[0])    // Values
                     );
+                    glp_set_row_name(P, current_row,
+                        ("Aesthetic 2 (right children) " + std::to_string(++aes2_count)).c_str()
+                    );
                     glp_set_row_bnds(P, current_row++, GLP_LO, 1, 0);
                 }
 
@@ -326,6 +339,9 @@ namespace tree {
                         3,           // Number of values
                         &(ind[0]),   // Indices of values
                         &(val[0])    // Values
+                    );
+                    glp_set_row_name(P, current_row,
+                        ("Aesthetic 4 " + std::to_string(++aes4_count)).c_str()
                     );
                     glp_set_row_bnds(P, current_row++, GLP_FX, 0, 0);
                 }
@@ -344,13 +360,16 @@ namespace tree {
                         &(ind[0]),   // Indices of values
                         &(val[0])    // Values
                     );
+                    glp_set_row_name(P, current_row,
+                        ("Aesthetic 3 " + std::to_string(++aes3_count)).c_str()
+                    );
                     glp_set_row_bnds(P, current_row++, GLP_LO, 2, NULL);
                 }
             }
         }
 
         // Sixth aesthetic
-        if (aes6) {
+        if (options.aes6) {
             for (auto& node_size : cache) {
                 for (auto& nodes : node_size.second) {
                     for (size_t i = 0; (i + 1) < nodes.second.size(); i++) {
@@ -368,6 +387,9 @@ namespace tree {
                                 &(ind[0]),   // Indices of values
                                 &(val[0])    // Values
                             );
+                            glp_set_row_name(P, current_row,
+                                ("Aesthetic 6 " + std::to_string(++aes6_count)).c_str()
+                            );
                             glp_set_row_bnds(P, current_row++, GLP_FX, 0, 0);
                         }
                         else {
@@ -382,12 +404,18 @@ namespace tree {
                                 &(ind[0]),   // Indices of values
                                 &(val[0])    // Values
                             );
+                            glp_set_row_name(P, current_row,
+                                ("Aesthetic 6 " + std::to_string(++aes6_count)).c_str()
+                            );
                             glp_set_row_bnds(P, current_row++, GLP_FX, 0, 0);
                         }
                     }
                 }
             }
         }
+
+        // Write model to file
+        if (!options.filename.empty()) glp_write_lp(P, NULL, options.filename.c_str());
 
         glp_simplex(P, NULL); // Solve problem with default settings
         return std::make_pair(P, levels);
@@ -402,7 +430,9 @@ int main(int argc, char** argv) {
         ("f,file", "output file", cxxopts::value<std::string>())
         ("d,depth", "depth", cxxopts::value<int>());
     options.add_options("optional")
-        ("i,incomp", "Produce an incomplete tree");
+        ("b,bst", "Produce a random binary search tree")
+        ("i,incomp", "Produce an incomplete tree")
+        ("c,cplex", "Output model in CPLEX format", cxxopts::value<std::string>()->default_value(""));
     options.parse_positional({ "file", "depth" });
 
     if (argc < 3) {
@@ -414,14 +444,24 @@ int main(int argc, char** argv) {
         auto result = options.parse(argc, (const char**&)argv);
 
         std::string file = result["file"].as<std::string>();
+        std::string cplex = result["cplex"].as<std::string>();
         int depth = result["depth"].as<int>();
-        bool incomp = result["incomp"].as<bool>();
+        bool bst = result["bst"].as<bool>(),
+            incomp = result["incomp"].as<bool>();
 
         TreeNode root;
-        if (incomp) root = incomplete_tree(depth);
-        else root = full_tree(depth);
+        if (incomp) {
+            root = incomplete_tree(depth);
+        }
+        else if (bst) {
+            root = make_random_tree(100).root;
+        }
+        else {
+            root = full_tree(depth);
+        }
 
-        auto mapping = map_tree(root), mapping_noaes6 = map_tree(root, false);
+        auto mapping = map_tree(root, { true, cplex }),
+            mapping_noaes6 = map_tree(root, { false, "" });
         SVG::SVG drawing = draw_tree(mapping.first, mapping.second);
         SVG::SVG drawing_noaes6 = draw_tree(mapping_noaes6.first, mapping_noaes6.second);
         drawing.autoscale();

@@ -15,6 +15,7 @@
 
 namespace tree {
     struct TreeNode {
+        std::string data;
         int id;
         std::unique_ptr<TreeNode> left = nullptr;
         std::unique_ptr<TreeNode> right = nullptr;
@@ -22,8 +23,15 @@ namespace tree {
         size_t height();
     };
 
+    TreeNode fig2();
+
     // Map level numbers to lists of nodes at that level
     using LevelMap = std::unordered_map<int, std::vector<TreeNode*>>;
+    struct TreeOptions {
+        bool aes6;
+        std::string filename;
+    };
+    const TreeOptions DEFAULT_TREE_OPTIONS = { true, "" };
 
     double factorial(const int n);
     int binary_trees(int n);
@@ -36,7 +44,10 @@ namespace tree {
     TreeNode full_tree(int height);
     TreeNode incomplete_tree(int height);
     SVG::SVG draw_tree(glp_prob* P, LevelMap& level);
-    std::pair<glp_prob*, LevelMap> map_tree(TreeNode& root, bool aes6 = true);
+    std::pair<glp_prob*, LevelMap> map_tree(
+        TreeNode& root,
+        const TreeOptions& options=DEFAULT_TREE_OPTIONS
+    );
 
     namespace helpers {
         void full_tree_helper(TreeNode& node, int height);

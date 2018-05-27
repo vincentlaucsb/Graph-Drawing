@@ -115,6 +115,55 @@ namespace force_directed {
         return graph;
     }
 
+    // Hypercube of Order 4
+    TNEANet hypercube_4() {
+        TNEANet graph;
+        for (int i = 0; i < 16; i++)
+            graph.AddNode(i);
+
+        for (int j = 0; j < 2; j++) {
+            graph.AddEdge(8 * j + 0, 8 * j + 1);
+            graph.AddEdge(8 * j + 1, 8 * j + 2);
+            graph.AddEdge(8 * j + 2, 8 * j + 3);
+            graph.AddEdge(8 * j + 0, 8 * j + 3);
+
+            graph.AddEdge(8 * j + 0, 8 * j + 4);
+            graph.AddEdge(8 * j + 1, 8 * j + 5);
+            graph.AddEdge(8 * j + 2, 8 * j + 6);
+            graph.AddEdge(8 * j + 3, 8 * j + 7);
+
+            graph.AddEdge(8 * j + 4, 8 * j + 5);
+            graph.AddEdge(8 * j + 5, 8 * j + 6);
+            graph.AddEdge(8 * j + 6, 8 * j + 7);
+            graph.AddEdge(8 * j + 7, 8 * j + 4);
+        }
+
+        for (int i = 0; i < 8; i++) {
+            graph.AddEdge(i, i + 8);
+        }
+
+        return graph;
+    }
+
+    TNEANet tree() {
+        // Binary tree of height 2
+        
+        TNEANet graph;
+        for (int i = 0; i < 7; i++)
+            graph.AddNode(i);
+
+        graph.AddEdge(0, 1);
+        graph.AddEdge(0, 2);
+
+        graph.AddEdge(1, 3);
+        graph.AddEdge(1, 4);
+
+        graph.AddEdge(2, 5);
+        graph.AddEdge(2, 6);
+
+        return graph;
+    }
+
     TNEANet wheel(int n) {
         TNEANet graph;
 

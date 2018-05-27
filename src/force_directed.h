@@ -59,5 +59,6 @@ namespace force_directed {
     TNEANet ladder(int);
     TNEANet petersen();
     TNEANet hypercube();
-    TNEANet test();
+    TNEANet hypercube_4();
+    TNEANet tree();
 }

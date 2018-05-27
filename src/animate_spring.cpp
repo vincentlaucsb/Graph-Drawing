@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
     if (n < m) n = m;
     try {
         for (int i = m; i <= n; i++) {
-            auto graph = complete(i);
+            auto graph = tree();
             std::vector<SVG::SVG> frames = force_directed_layout(params, graph);
 
             if (side_by_side) {

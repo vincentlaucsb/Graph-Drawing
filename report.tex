@@ -35,6 +35,27 @@
 \maketitle
 \tableofcontents
 
+\chapter{Introduction}
+Graph theory is one of the most widely applicable fields of math, and as such there has been a large demand for different methods of visualizing graphs. Just as the types and uses of graphs are wide and varied, there are also a variety of different algorithms for visualizing graphs. These algorithms vary in the type of graphs they will draw, and they guarantees they may provide, e.g. planarity and symmetry.
+
+\section{Computer Science Basics}
+Although this is a paper on applied math,\footnote{As the author claims} because it also focuses on the analysis of algorithms, some computer science fundamentals are required.
+
+\subsection{Complexity}
+When analyzing algorithms, one feature we want to analyze is how complicated they can get as the input size $n$ increases. For example, suppose we want to count the number of occurrences of 5 in an unsorted list. Because the list is unsorted, we do not know in general where the 5's are so we have to scan every item in the list. Hence, the running time $T(n)$ of this algorithm is based on the size of the list $n$ and we say this algorithm runs in in linear time.
+
+\begin{defn}[$\Omega(f(n))$] We say an algorithm is $\Omega(f(n))$ if there is some positive constants $a, n_0$ such that $a \cdot f(n) \leq T(n)$ for all $n \geq n_0$.
+\end{defn}
+
+\begin{defn}[$O(f(n))$] We say an algorithm is $O(f(n))$ if there is some positive constants $b, n_0$ such that $b \cdot f(n) \geq T(n)$ for all $n \geq n_0$.
+\end{defn}
+
+\begin{defn}[$\Theta(f(n))$] We say an algorithm is $\Theta(f(n))$ if it is $\Omega(f(n))$ and $O(f(n))$.
+\end{defn}
+
+\subsubsection{What Gets Analyzed?}
+Usually, algorithms are analyzed for their time complexity (how long it takes to compute something). However, they may also be analyzed for their space complexity (memory usage), and any other aspect of their performance. For example, with respect to graph drawing, algorithms may be analyzed for the amount of screen real estate they take up.
+
 \chapter{Tree Drawing Algorithms}
 \section{Motivation}
 Many types of graphs are used in computer science, and one of the most common is the tree--especially binary trees. Binary trees--trees with at most two nodes--form the basis for many data structures in computer science. For example, when many people thinking of storing a collection of items to be searched later, the naive solution is to store them in a list. When checking to see if an item is part of this collection, a naive solution is to simply iterate through the list, comparing our item against each element of the list. In other words, for a collection of $n$ items, we have to perform $n$ comparisons.
@@ -538,6 +559,20 @@ Force directed algorithms attempt to draw graphs by relating them to some physic
 Although there are plenty of force-directed algorithms, they all have the final result of mapping the vertices of a graph to $\mathbb{R}^2$. Hence, we saw that each vertex $v$ in a graph gets mapped to some point $p_v = (x_v, y_v)$. 
 
 \section{Eades' Spring System}
+In this algorithm, edges are modeled as springs while vertices are viewed as electrical forces which repel each other. Formally, the force on each vertex $v$ is 
+\[
+    F(v) = \sum_{(u, v) \in E} f_{uv} + \sum_{(u, v) \in V \times V} g_{uv}
+\]
+
+If we use Hooke's law springs and electrical forces which follow an inverse square law, we can write this as
+
+\[
+    \sum_{(u, v) \in E} k_{uv}^{(1)} ( d(p_u, p_v) - l_{uv} ) \frac{x_v - x_u}{d(p_u, p_v)} +
+    \sum_{(u, v) \in V \times V} \frac{k_{uv}^{(2)}}{( d(p_u, p_v) )^2 }  \frac{x_v - x_u}{d(p_u, p_v)}
+\]
+
+\subsection{Algorithm}
+A very simple algorithm for finding the system's equilibrium is to move each vertex in the direction of the force in a small proportion to the magnitude of the force. An example of this algorithm at work drawing $K_8$ is shown below
 
 \begin{figure}[H]
     \centering

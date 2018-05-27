@@ -1,9 +1,11 @@
 \documentclass[11pt]{report}
 \usepackage[margin=1.25in]{geometry}
 \usepackage{graphicx,float}
+
+% Figures
 \usepackage{amsmath,amsthm,amsfonts}
+\usepackage{rotating}
 \usepackage{subcaption} % For side-by-side figures
-\usepackage{algorithm,algorithmicx,algpseudocode} % For algorithms
 
 % For labelings/struct descriptions
 \usepackage{blindtext}
@@ -40,6 +42,47 @@ Many types of graphs are used in computer science, and one of the most common is
 \bigskip
 
 However, a binary search tree is constructed such that for every node, every child node on its left is less than the value at the root, and vice versa for the right side. Hence, when searching for an item, if our item is less than the value at the current node, then we only need to keep searching in the left subtree. As a result, we can find an item we want with on average just $\log_2{n}$ comparisons. As a result of the many implementations of trees in computers, many have discussed ways of visualizing these data structures.
+
+\begin{figure}[H]
+    \includegraphics[width=\linewidth]{report/bst_20.pdf}
+    \caption{A binary search tree with 20 items}
+\end{figure}
+
+\subsection{Definitions}
+Before talking about trees, it would behoove us to build a common vocabulary about them.
+
+\begin{defn}[Level (of a node)]
+    The level (or depth) of a node in a binary tree is the number of edges between that node and the root. By convention, the root is on level 0.
+\end{defn}
+
+\begin{defn}[Height (of a tree)]
+    The height of a binary tree is the number of edges between the root and the deepest leaf.
+\end{defn}
+
+\begin{defn}[Perfect Binary Tree]
+    A perfect binary tree is a binary tree where all leaf nodes are on the same level, and all other nodes have two children.
+\end{defn}
+
+\subsubsection{Tree Traversal}
+When implementing trees as computer data structures, there are a multitude of ways to traverse them.
+
+\begin{defn}[Level Order Traversal]
+    In a level order traversal, we move from top to bottom, left to right. In other words, a level order traversal is a breadth-first traversal of a tree.
+\end{defn}
+
+\begin{figure}[H]
+    \includegraphics[width=\linewidth]{report/level_order.pdf}
+    \caption{A perfect tree of height 3, where the numbers correspond to the order in which nodes are visited in a level order traversal}
+\end{figure}
+
+\begin{defn}[Preorder Traversal]
+    In a preorder traversal, the root is visited first. Then, the procedure is called recursively on the left subtree, and then recursively on the right subtree. A preorder traversal is a form of depth-first search.
+\end{defn}
+
+\begin{figure}[H]
+    \includegraphics[width=\linewidth]{report/preorder.pdf}
+    \caption{A preorder traversal in a perfect tree of height 3}
+\end{figure}
 
 \iffalse
 \section{Reingold-Tillford (1981)}
@@ -204,7 +247,7 @@ Unfortunately, as shown earlier (note to self: show earlier), locally minimizing
 
 In the algorithm below, the problem of drawing a tree is formulated as a linear program. The problem is drawing a tree can be described as finding the narrowest possible drawing such that it matches several aesthetics:
 \begin{enumerate}
-    \item \textbf{Layering} All nodes at the same level (number of edges between a node and the root) share the same y-coordinate
+    \item \textbf{Layering} All nodes at the same level, i.e. the number of edges between a node and the root, share the same y-coordinate
     \item \textbf{Child Positioning} Each left child is placed strictly to the left of its parent, and each right child is placed strictly to the right of its parent
     \item \textbf{Separation} For any two nodes at the same level, they must be placed at least 2 units apart.
     \item \textbf{Centering} If a parent has two children, then it must be centered over them
@@ -212,7 +255,7 @@ In the algorithm below, the problem of drawing a tree is formulated as a linear 
     \item \textbf{Isomorphic Trees Drawn Similarly} If two subtrees are isomorphic, they must be drawn identically (minus a translation)
 \end{enumerate}
 
-It should be noted that aesthetic 1, 2 and 3 imply 5 (see Theorem \ref{tree_lp_planar}).
+As Theorem \ref{tree_lp_planar} shows, enforcing aesthetics 1, 2 and 3 are sufficient to guarantee 5.
 
 \subsection{Formal Description}
 First, define $f$ to be a mapping from a tree's vertex set to $\mathbb{R}^2$. Trivially, we can satisfy Aesthetic 1 by defining $f_y(n) = -i$ where $i$ is the level of node $n$. Then, we use a linear program to determine the value of $f_x(n)$. We will introduce two auxiliary variables $x_{max}$ and $x_{min}$ which give the left and right bounds for the x-coordinates of our drawing respectively. Hence, our goal of creating the narrowest possible drawing may be expressed as 
@@ -228,7 +271,7 @@ subject to:
     &f_x(n) \leq x_{max} \\
     &f_x(n) - f_x( \leftc{n} ) \geq 1 &\text{For all $n$ with a left child (Aesthetic 2)} \\
     &f_x( \rightc{n} ) - f_x(n) \geq 1 &\text{For all $n$ with a right child (Aesthetic 2)} \\
-    &\abs{f_x(n) - f_x(m)} \geq 2 &\text{For all $m, n$ at level $i$ (Aesthetic 3)} \\
+    &f_x(n) - f_x(m) \geq 2 &\text{$n$ is the level-order successor of $m$ (Aesthetic 3)} \\
     &\frac{ f_x(\leftc{n}) + f_x(\rightc{n}) }{2} = f_x(n)
          &\text{For all $n$ with two children (Aesthetic 4)} \\
 \end{aligned}
@@ -270,7 +313,7 @@ Because, corresponding subtrees in isomorphic trees are also isomorphic, the equ
             \caption{The full tree of height 0 as drawn by this algorithm}
         \end{figure}
         
-        \paragraph{Inductive Hypothesis} Assuming that the previous $i - 1$ levels of the tree are drawn in a planar fashion, we will show that for any node in the $i^{th}$ level, the edge between it and its parent does not intersection any other edges.
+        \paragraph{Inductive Hypothesis} Assuming that the previous $i - 1$ levels of the tree are drawn in a planar fashion, we will show that for any node in the $i^{th}$ level, the edge between it and its parent does not intersect any other edges.
         
         \bigskip
         
@@ -282,7 +325,7 @@ Because, corresponding subtrees in isomorphic trees are also isomorphic, the equ
             \caption{A right subtree crossing with a left subtree}
         \end{figure}
         
-        However, this implies a violation of aesthetic 3. It may also be since some node's left subtree crosses some other node's left subtree. However, either implies the subtrees are drawn directly on top of each other (a violation of aesthetic 2), or that a ``left'' subtree is drawn to the right of its parent, which is a violation of aesthetic 3.
+        However, this implies a violation of aesthetic 3 as the left subtree of the right parent should be drawn to the right of the right subtree of the left parent. Moreover, there may be a crossing since some node's left subtree crosses some other node's left subtree. However, this either implies the subtrees are drawn directly on top of each other (a violation of aesthetic 3), or that a ``left'' subtree is drawn to the right of its parent, which is a violation of aesthetic 2.
         
         \begin{figure}[H]
             \centering
@@ -352,15 +395,18 @@ Because, corresponding subtrees in isomorphic trees are also isomorphic, the equ
 \end{corollary}
 
 \subsection{Implementation}
-In this paper, this algorithm was implemented as a C++ program based around the GNU Linear Programming Kit (GLPK)--an open-source linear optimizer based on the simplex method. Each node was represented as a data structure as follows:
+In this paper, this algorithm was implemented as a C++ program based around the GNU Linear Programming Kit (GLPK)--an open-source linear optimizer based on the simplex method. Each node (in the C++ implementation--struct TreeNode) was represented as a data structure as follows:
 
 \begin{labeling}{alligator}
     \item [left]  Pointer to left child
     \item [right] Pointer to right child
     \item [id]    Corresponding column index of constraint matrix
+    \item [data]  Self-explanatory
 \end{labeling}
 
-Then, aesthetics 1-5 could be computed using $2n$ iterations. First, an iterative level-order traversal was used to simultaneously assign IDs to each node, determine the number of left and right sons, and thus, determine the total number of rows and columns in the constraint matrix. During the level-order traversal, a hash table mapping each level of the tree to an array of node pointers was populated (\lstinline{std::unordered_map<int, TreeNode*>}). Then, a final iteration over this auxiliary data structure was used to calculate the aesthetics. (Write about how paper uses a different method).
+Then, aesthetics 1-5 could be computed using $2n$ iterations. First, an iterative level-order traversal was used to simultaneously assign IDs to each node, determine the number of left and right sons, and thus, determine the total number of rows and columns in the constraint matrix. By using an iterative method, our traversal took linear as opposed to quadratic time. During the level-order traversal, a hash table mapping each level of the tree to an array of node pointers was populated.
+\footnote{Implemented in C++ as \lstinline{std::unordered_map<int, TreeNode*>}}
+Then, a final iteration over this auxiliary data structure was used to calculate the aesthetics. (Write about how paper uses a different method).
 
 \bigskip
 
@@ -368,7 +414,7 @@ It should be noted that regardless of method used, computing the required aesthe
 
 \bigskip
 
-Finally, in order to populate the auxiliary data structure, for every node, we also had to keep track of which level it was on. To accomplish this, during the iterative traversal where children are added to a queue, the current level + 1 was also paired with the child pointers. (Find a better way to word this) The following pseudocode is loosely based on C++ syntax.
+Finally, in order to populate the auxiliary data structure, for every node, we also had to keep track of which level it was on. To accomplish this during an iterative level-order traversal, each node pointer was paired with its current level (e.g. (\lstinline{std::pair<int, TreeNode*>})). As shown in the pseudocode below, each pointer's associated level can be determined when we examine its parent.
 
 \begin{algorithm}[H]
     \caption{Tree Layout -- Column Index Assignment}
@@ -389,12 +435,12 @@ Finally, in order to populate the auxiliary data structure, for every node, we a
         \State $current\_node\rightarrow id \gets current\_id$
             % Left child
             \If{$current\_node\rightarrow left$ is not null}
-            \State $children \gets (current\_level + 1, root\rightarrow left)$
+            \State $children \gets (current\_level + 1, root\rightarrow left)$ \Comment{Determine level of child}
             \State $left\_sons \gets left\_sons + 1$ \Comment{Keep count of left sons (aesthetic 2)}
             \EndIf
             % Right child
-            \If{$current\_node\rightarrow left$ is not null}
-            \State $children \gets (current\_level + 1, root\rightarrow right)$
+            \If{$current\_node\rightarrow right$ is not null}
+            \State $children \gets (current\_level + 1, root\rightarrow right)$ \Comment{Determine level of child}
             \State $right\_sons \gets right\_sons + 1$ \Comment{Keep count of right sons (aesthetic 2)}
             \EndIf
         \State $levels[current\_level].push\_back(current\_node)$
@@ -451,12 +497,36 @@ As mentioned by the paper's authors, there is some debate about whether or not t
     \begin{subfigure}{\linewidth}
     \centering
     \includegraphics[width=\linewidth]{"report/aes6_20".pdf}
-    \caption{An incomplete tree of height 20 as drawn by this algorithm satisfying aesthetics 1-6}
+    \caption{An isomorphic tree as drawn by this algorithm satisfying aesthetics 1-6}
     \end{subfigure}
+    \caption{Two drawings of isomorphic trees differing only in the application of aesthetic 6}
 \end{figure}
 
 \subsubsection{Rank of a Tree}
-In order to efficiently draw isomorphic trees identically, we define a function $rank()$ which assigns a unique integer to every binary tree. For even $n$, there are $B_n = \frac{ \binom{2n}{n} }{ n + 1 }$ different binary trees.
+In order to efficiently draw isomorphic trees identically, we define a function $rank()$ which assigns a unique integer to every binary tree. We must be careful and note that this number is unique among trees of the same size, as trees of different size may be assigned the same number. Hence, we can say two subtrees are isomorphic if they have the same size and rank. For even $n$, there are $B_n = \frac{ \binom{2n}{n} }{ n + 1 }$ different binary trees, so we can say $rank(t)$ is a mapping from the trees $t$ of size $n$ to the integers $1, 2, ..., B_n$.
+\begin{algorithm}[H]
+    \caption{Tree Layout -- Calculating the Rank of Each Node}
+    \begin{algorithmic}[1]
+        % Begin Describing Algorithm
+        \Procedure{rank}{$t$, $cache$}        
+        \If{$t$ is null}
+            \State $rank \gets 1$
+        \Else
+            \State $rank \gets B_n(r(t)) \times rank(l(t) - 1) + rank(r(t)) + \sum G_{j,n}$
+        \EndIf
+        \State $cache[size(t)][rank].push\_back(tree)$
+        \State \Return $rank$
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+In the algorithm above, the $rank()$ of a tree is computed recursively, moving from the bottom up. Hence, calling $rank()$ on the root node has the effect of computing the $rank()$ of every node in the tree. As a result, it behooves us to cache the calls of $rank()$. Specifically, in this implementation, the cache is a mapping of a subtree's size and rank to an array of trees of similar size and rank (i.e. isomorphic subtrees).\footnote{In C++, the author choose to implement the cache as \\ \lstinline{std::unordered_map<int, std::unordered_map<int, std::vector<TreeNode*>>>})} Hence, implementing the sixth aesthetic is simply a matter of iterating over the arrays of this cache.
+
+\begin{sidewaysfigure}
+    \centering
+    \includegraphics[width=\linewidth]{"report/bst_large".pdf}
+    \caption{A binary search tree with 50 items}
+\end{sidewaysfigure}
 
 \pagebreak
 

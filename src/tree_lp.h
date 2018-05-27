@@ -23,8 +23,6 @@ namespace tree {
         size_t height();
     };
 
-    TreeNode fig2();
-
     // Map level numbers to lists of nodes at that level
     using LevelMap = std::unordered_map<int, std::vector<TreeNode*>>;
     struct TreeOptions {
@@ -41,7 +39,7 @@ namespace tree {
     using Rank = int;
     using RankMap = std::unordered_map<NumNodes, std::unordered_map<Rank, std::vector<TreeNode*>>>;
     int rank(TreeNode* tree, RankMap* cache = nullptr);
-    TreeNode full_tree(int height);
+    TreeNode perfect_tree(int height);
     TreeNode incomplete_tree(int height);
     SVG::SVG draw_tree(glp_prob* P, LevelMap& level);
     std::pair<glp_prob*, LevelMap> map_tree(
@@ -63,5 +61,12 @@ namespace tree {
             std::default_random_engine generator;
             std::uniform_real_distribution<double> distribution;
         };
+    }
+
+    namespace paper {
+        TreeNode fig2();
+        void level_order(TreeNode&);
+        void preorder(TreeNode&);
+        void preorder(TreeNode&, int&);
     }
 }

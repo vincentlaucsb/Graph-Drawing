@@ -2,43 +2,74 @@
 #include "bst.hpp"
 
 namespace tree {
-    TreeNode fig2() {
-        /** Replicate figure 2 from RT81 */
-        TreeNode root;
+    namespace paper {
+        // Functions for writing the paper
+        TreeNode fig2() {
+            /** Replicate figure 2 from RT81 */
+            TreeNode root;
 
-        // Left subtree
-        auto& d1_left = root.left = std::make_unique<TreeNode>();
-        auto& d2_left = d1_left->left = std::make_unique<TreeNode>();
-        d1_left->right = std::make_unique<TreeNode>();
-        auto& d3_left = d2_left->left = std::make_unique<TreeNode>();
-        d2_left->right = std::make_unique<TreeNode>();
-        auto& d4_left = d3_left->left = std::make_unique<TreeNode>();
-        d3_left->right = std::make_unique<TreeNode>();
-        d4_left->left = std::make_unique<TreeNode>();
-        auto& d5_right = d4_left->right = std::make_unique<TreeNode>();
-        d5_right->left = std::make_unique<TreeNode>();
-        auto& d6_right = d5_right->right = std::make_unique<TreeNode>();
-        auto& d7_left = d6_right->right = std::make_unique<TreeNode>();
-        d7_left->left = std::make_unique<TreeNode>();
-        d7_left->right = std::make_unique<TreeNode>();
+            // Left subtree
+            auto& d1_left = root.left = std::make_unique<TreeNode>();
+            auto& d2_left = d1_left->left = std::make_unique<TreeNode>();
+            d1_left->right = std::make_unique<TreeNode>();
+            auto& d3_left = d2_left->left = std::make_unique<TreeNode>();
+            d2_left->right = std::make_unique<TreeNode>();
+            auto& d4_left = d3_left->left = std::make_unique<TreeNode>();
+            d3_left->right = std::make_unique<TreeNode>();
+            d4_left->left = std::make_unique<TreeNode>();
+            auto& d5_right = d4_left->right = std::make_unique<TreeNode>();
+            d5_right->left = std::make_unique<TreeNode>();
+            auto& d6_right = d5_right->right = std::make_unique<TreeNode>();
+            auto& d7_left = d6_right->right = std::make_unique<TreeNode>();
+            d7_left->left = std::make_unique<TreeNode>();
+            d7_left->right = std::make_unique<TreeNode>();
 
-        // Right subtree
-        auto& d1_right = root.right = std::make_unique<TreeNode>();
-        auto& d2_right = d1_right->right = std::make_unique<TreeNode>();
-        d1_right->left = std::make_unique<TreeNode>();
-        auto& d3_right = d2_right->right = std::make_unique<TreeNode>();
-        d2_right->left = std::make_unique<TreeNode>();
-        auto& d4_right = d3_right->right = std::make_unique<TreeNode>();
-        d3_right->left = std::make_unique<TreeNode>();
-        d4_right->right = std::make_unique<TreeNode>();
-        auto& d5_left = d4_right->left = std::make_unique<TreeNode>();
-        d5_left->right = std::make_unique<TreeNode>();
-        auto& d6_left = d5_left->left = std::make_unique<TreeNode>();
-        auto& d7_right = d6_left->left = std::make_unique<TreeNode>();
-        d7_right->left = std::make_unique<TreeNode>();
-        d7_right->right = std::make_unique<TreeNode>();
+            // Right subtree
+            auto& d1_right = root.right = std::make_unique<TreeNode>();
+            auto& d2_right = d1_right->right = std::make_unique<TreeNode>();
+            d1_right->left = std::make_unique<TreeNode>();
+            auto& d3_right = d2_right->right = std::make_unique<TreeNode>();
+            d2_right->left = std::make_unique<TreeNode>();
+            auto& d4_right = d3_right->right = std::make_unique<TreeNode>();
+            d3_right->left = std::make_unique<TreeNode>();
+            d4_right->right = std::make_unique<TreeNode>();
+            auto& d5_left = d4_right->left = std::make_unique<TreeNode>();
+            d5_left->right = std::make_unique<TreeNode>();
+            auto& d6_left = d5_left->left = std::make_unique<TreeNode>();
+            auto& d7_right = d6_left->left = std::make_unique<TreeNode>();
+            d7_right->left = std::make_unique<TreeNode>();
+            d7_right->right = std::make_unique<TreeNode>();
 
-        return root;
+            return root;
+        }
+
+        void level_order(TreeNode& root) {
+            // Given a tree, label its nodes via a level-order traversal
+            std::deque<TreeNode*> children = { &root };
+            int id = 1;
+            while (!children.empty()) {
+                auto current = children.front();
+                current->data = std::to_string(id++);
+
+                if (current->left) children.push_back(current->left.get());
+                if (current->right) children.push_back(current->right.get());
+
+                children.pop_front();
+            }
+        }
+
+        void preorder(TreeNode& root) {
+            // Given a tree, label its nodes via a preorder traversal
+            int id = 1;
+            preorder(root, id);
+        }
+
+        void preorder(TreeNode& root, int& id) {
+            // Given a tree, label its nodes via a preorder traversal
+            root.data = std::to_string(id++);
+            if (root.left) preorder(*(root.left.get()), id);
+            if (root.right) preorder(*(root.right.get()), id);
+        }
     }
 
     size_t TreeNode::height() {
@@ -102,14 +133,14 @@ namespace tree {
     }
 
     namespace helpers {
-        void full_tree_helper(TreeNode& node, int height) {
+        void perfect_tree_helper(TreeNode& node, int height) {
             // Create a full binary tree of height h
             node.left = std::make_unique<TreeNode>();
             node.right = std::make_unique<TreeNode>();
 
             if (height) {
-                full_tree_helper(*(node.left.get()), height - 1);
-                full_tree_helper(*(node.right.get()), height - 1);
+                perfect_tree_helper(*(node.left.get()), height - 1);
+                perfect_tree_helper(*(node.right.get()), height - 1);
             }
         };
 
@@ -131,9 +162,9 @@ namespace tree {
         }
     }
 
-    TreeNode full_tree(int height) {
+    TreeNode perfect_tree(int height) {
         TreeNode root;
-        if (height) helpers::full_tree_helper(root, height - 1);
+        if (height) helpers::perfect_tree_helper(root, height - 1);
         return root;
     }
 
@@ -147,8 +178,23 @@ namespace tree {
 
     SVG::SVG draw_tree(glp_prob* P, LevelMap& level) {
         // Given a solved linear program and the corresponding tree, draw it
+        const double circle_radius = 15;
+
         SVG::SVG root;
-        root.style("line").set_attr("stroke", "#000000");
+        auto edges = root.add_child<SVG::Group>(),
+            nodes = root.add_child<SVG::Group>(),
+            text_labels = root.add_child<SVG::Group>();
+
+        root.style("circle")
+            .set_attr("stroke", "#000000")
+            .set_attr("fill", "#ffffff");
+        root.style("text")
+            .set_attr("font-family", "sans-serif")
+            .set_attr("font-size", "10pt")
+            .set_attr("dominant-baseline", "central")
+            .set_attr("text-anchor", "middle");
+        root.style("line")
+            .set_attr("stroke", "#000000");
 
         size_t current_level = 0, current_level_index = 0;
         const double scaling = 50;
@@ -163,25 +209,28 @@ namespace tree {
                 current_level_index = 0;
             }
 
-            vertices[level[current_level][current_level_index]] = root.add_child<SVG::Circle>(
+            auto cur_node = level[current_level][current_level_index];
+            auto cur_vertex = vertices[cur_node] = nodes->add_child<SVG::Circle>(
                 glp_get_col_prim(P, i) * scaling, // x-value
                 (double)current_level * scaling,  // y-value
-                10 // circle radius
-                );
+                circle_radius);
 
             current_level_index++;
+
+            // Add text labels
+            *text_labels << SVG::Text(*cur_vertex, cur_node->data);
         }
 
         // Add edges
         for (auto& elem : vertices) {
             // Left
-            if (elem.first->left) root.add_child<SVG::Line>(
+            if (elem.first->left) edges->add_child<SVG::Line>(
                 *(vertices[elem.first]),
                 *(vertices[elem.first->left.get()])
                 );
 
             // Right
-            if (elem.first->right) root.add_child<SVG::Line>(
+            if (elem.first->right) edges->add_child<SVG::Line>(
                 *(vertices[elem.first]),
                 *(vertices[elem.first->right.get()])
                 );
@@ -424,16 +473,18 @@ namespace tree {
 
 int main(int argc, char** argv) {
     using namespace tree;
-    cxxopts::Options options(argv[0], "Produces a full tree of specified depth");
-    options.positional_help("[output file] [depth]");
+    cxxopts::Options options(argv[0], "Draw a full tree of height n");
+    options.positional_help("[output file] [n]");
     options.add_options("required")
         ("f,file", "output file", cxxopts::value<std::string>())
-        ("d,depth", "depth", cxxopts::value<int>());
+        ("n,num", "n", cxxopts::value<int>());
     options.add_options("optional")
-        ("b,bst", "Produce a random binary search tree")
-        ("i,incomp", "Produce an incomplete tree")
-        ("c,cplex", "Output model in CPLEX format", cxxopts::value<std::string>()->default_value(""));
-    options.parse_positional({ "file", "depth" });
+        ("b,bst", "Produce a random binary search tree with n items")
+        ("i,incomp", "Produce an incomplete tree of height n")
+        ("c,cplex", "Save model in CPLEX format to text file", cxxopts::value<std::string>()->default_value(""))
+        ("l,level", "Illustrate a level order traversal on a perfect tree of height n")
+        ("p,preorder", "Illustrate a preorder traversal on a perfect tree of height n");
+    options.parse_positional({ "file", "num" });
 
     if (argc < 3) {
         std::cout << options.help({ "optional" }) << std::endl;
@@ -445,20 +496,20 @@ int main(int argc, char** argv) {
 
         std::string file = result["file"].as<std::string>();
         std::string cplex = result["cplex"].as<std::string>();
-        int depth = result["depth"].as<int>();
+        int number = result["num"].as<int>();
         bool bst = result["bst"].as<bool>(),
-            incomp = result["incomp"].as<bool>();
+            incomp = result["incomp"].as<bool>(),
+            level = result["level"].as<bool>(),
+            preorder = result["preorder"].as<bool>();
 
         TreeNode root;
-        if (incomp) {
-            root = incomplete_tree(depth);
-        }
-        else if (bst) {
-            root = make_random_tree(100).root;
-        }
-        else {
-            root = full_tree(depth);
-        }
+        if (incomp) root = incomplete_tree(number);
+        else if (bst) root = make_random_tree(number).root;
+        else root = perfect_tree(number);
+
+        // Label nodes
+        if (level) paper::level_order(root);
+        if (preorder) paper::preorder(root);
 
         auto mapping = map_tree(root, { true, cplex }),
             mapping_noaes6 = map_tree(root, { false, "" });

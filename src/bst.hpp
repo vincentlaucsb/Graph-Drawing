@@ -7,25 +7,22 @@ namespace tree {
     public:
         Node root;
         void insert(std::string data, Node* current) {
+            if (current->data.empty()) {
+                current->data = data;
+                return;
+            }
+
             if (data < current->data) {
-                if (current->left) current = current->left.get();
-                else {
-                    current->left = std::make_unique<Node>();
-                    current->left->data = data;
-                    current = nullptr;
-                }
+                if (!current->left) current->left = std::make_unique<Node>();
+                current = current->left.get();
             }
             else if (data > current->data) {
-                if (current->right) current = current->right.get();
-                else {
-                    current->right = std::make_unique<Node>();
-                    current->right->data = data;
-                    current = nullptr;
-                }
+                if (!current->right) current->right = std::make_unique<Node>();
+                current = current->right.get();
             }
             else return;
 
-            if (current) this->insert(data, current);
+            insert(data, current);
         }
 
         void insert(std::string data) {
@@ -37,13 +34,10 @@ namespace tree {
         BinarySearchTree tree;
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(0, 100);
+        std::uniform_int_distribution<> dis(0, (int)num_items * 5);
 
-        for (int i = 0; i < num_items; i++) {
-            int number = dis(gen);
-            std::cout << "Inserting " << dis(gen) << std::endl;
-            tree.insert(std::to_string(number));
-        }
+        for (int i = 0; i < num_items; i++)
+            tree.insert(std::to_string(dis(gen)));
         
         return tree;
     }

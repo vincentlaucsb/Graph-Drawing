@@ -580,6 +580,45 @@ A very simple algorithm for finding the system's equilibrium is to move each ver
     \caption{The complete graph $K_8$}
 \end{figure}
 
+\subsection{Newton-Raphson Iteration}
+\subsubsection{If Only Electrical Force Is Involved}
+\[
+\begin{aligned}
+% ix wrt xj
+\frac{ \partial{F_{xi}} }{ \partial{x_j} } &=
+\dfrac{3k_{uv}^{(2)}\left( x_i - x_j \right)^2}{d(v_i, v_j)^5} -
+\dfrac{k_{uv}^{(2)}}{d(v_i, v_j)^3} \\
+% ix wrt yj
+\frac{ \partial{F_{xi}} }{ \partial{y_j} } &= 
+\dfrac{3k_{uv}^{(2)}\left( x_i - x_j \right)\left( y_i - y_j \right)}{d(v_i, v_j)^5} \\
+% iy wrt xj
+\frac{ \partial{F_{yi}} }{ \partial{x_j} } &= 
+\dfrac{3k_{uv}^{(2)}\left( y_i - y_j \right)\left( x_i - x_j \right)}{d(v_i, v_j)^5} \\
+% iy wrt yj
+\frac{ \partial{F_{yi}} }{ \partial{y_j} } &= 
+\dfrac{3k_{uv}^{(2)}\left( y_i - y_j \right)^2}{d(v_i, v_j)^5} -
+\dfrac{k_{uv}^{(2)}}{d(v_i, v_j)^3}
+\end{aligned}
+\]
+
+\subsubsection{If Only Spring Force Is Involved}
+% ix wrt xj
+\[\begin{aligned}
+\frac{ \partial{F_{xi}} }{ \partial{x_j} } &= 
+-\dfrac{k_{uv}^{(1)}\left( d(v_i, v_j) -l_\text{uv}\right)}{d(v_i, v_j)}-\dfrac{k_{uv}^{(1)}\left( x_i - x_j \right)^2\left(d(v_i, v_j)-l_\text{uv}\right)}{d(v_i, v_j)^3} 
++\dfrac{k_{uv}^{(1)}\left( x_i - x_j \right)^2}{ d(v_i, v_j)^2 } \\
+% ix wrt yj
+\frac{ \partial{F_{xi}} }{ \partial{y_j} } &= 
+-\dfrac{k_{uv}^{(1)}\left(x_\text{i}-x_\text{j}\right)\left( y_i - y_j \right)\left(d(v_i, v_j)-l_\text{uv}\right)}{d(v_i, v_j)^3}+\dfrac{k_{uv}^{(1)}\left(x_\text{i}-x_\text{j}\right)\left( y_i - y_j \right)}{ d(v_i, v_j)^2 } \\
+% iy wrt xj
+\frac{ \partial{F_{yi}} }{ \partial{x_j} } &= 
+-\dfrac{k_{uv}^{(1)}\left(y_\text{i}-y_\text{j}\right)\left(x_i - x_j\right)\left(d(v_i, v_j)-l_\text{uv}\right)}{d(v_i, v_j)^3}+\dfrac{k_{uv}^{(1)}\left(y_\text{i}-y_\text{j}\right)\left( x_i - x_j \right)}{ d(v_i, v_j)^2 } \\
+% iy wrt yj
+\frac{ \partial{F_{yi}} }{ \partial{y_j} } &= 
+-\dfrac{k_{uv}^{(1)}\left(d(v_i, v_j)-l_\text{uv}\right)}{d(v_i, v_j)}-\dfrac{k_{uv}^{(1)} \left(y_j - y_i\right)^2 \left(d(v_i, v_j)-l_\text{uv}\right)}{d(v_i, v_j)^3} 
++\dfrac{k_{uv}^{(1)} \left(y_j - y_i\right)^2 }{ d(v_i, v_j)^2 }\\
+\end{aligned}\]
+
 \section{Tutte's Barycenter Method}
 An early force directed drawing method was Tutte's Barycenter Method. In this method, the force on every vertex $v$ is given by 
 

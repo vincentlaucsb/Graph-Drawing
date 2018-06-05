@@ -37,6 +37,7 @@ namespace force_directed {
     SVG::SVG draw_graph(TNEANet& graph, const double width = 500);
     void random_layout(TNEANet& graph);
     std::vector<SVG::SVG> force_directed_layout(ForceDirectedParams& params, TNEANet& graph);
+    void force_directed_layout_la(ForceDirectedParams& params, TNEANet& graph);
     std::vector<SVG::SVG> barycenter_layout(TNEANet& graph,
         const size_t fixed_vertices = 5, const double width = 500);
     BarycenterLayout barycenter_layout_la(TNEANet& graph, const size_t fixed_vertices, const double width = 500);

@@ -6,6 +6,11 @@ namespace force_directed {
         std::map<int, VertexSet>& adjacent);
     double distance_between(TNEANet& graph, int id1, int id2);
     double distance_between(TNEANet::TNodeI& v1, TNEANet::TNodeI& v2);
+    double partial_fx_x(ForceDirectedParams& params, TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent);
+    double partial_fx_y(ForceDirectedParams& params, TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent);
+    double partial_fy_x(ForceDirectedParams& params, TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent);
+    double partial_fy_y(ForceDirectedParams& params, TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent);
+
 
     void random_layout(TNEANet& graph) {
         std::default_random_engine generator;
@@ -147,6 +152,173 @@ namespace force_directed {
         }
 
         return ret;
+    }
+
+    double partial_fx_x(ForceDirectedParams& params, 
+        TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent) {
+        auto xi = get_xy(i).first, xj = get_xy(j).first;
+
+        double dist = distance_between(i, j);
+        
+        // Compute partial derivative of electrical force
+        double ret = (3 * params.kuv2 * pow(xi - xj, 2))/pow(dist, 5)
+            - params.kuv2/pow(dist, 3);
+
+        // Compute pd of spring force
+        if (adjacent[i.GetId()].find(j.GetId()) != adjacent[i.GetId()].end()) {
+            ret += -params.kuv1 * (dist - params.luv)/dist
+                - (params.kuv1 * pow(xi - xj, 2) * (dist - params.luv))/pow(dist, 3)
+                + (params.kuv1 * pow(xi - xj, 2)) /pow(dist, 2);
+        }
+
+        return ret;
+    }
+
+    double partial_fx_y(ForceDirectedParams& params, 
+        TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent) {
+        auto xi = get_xy(i).first, xj = get_xy(j).first,
+            yi = get_xy(i).second, yj = get_xy(j).second;
+
+        double dist = distance_between(i, j);
+
+        // Compute partial derivative of electrical force
+        double ret = (3 * params.kuv2 * (xi - xj) * (yi - yj)) / pow(dist, 5);
+
+        // Compute pd of spring force
+        if (adjacent[i.GetId()].find(j.GetId()) != adjacent[i.GetId()].end()) {
+            ret += -(params.kuv1 * (xi - xj) * (yi - yj) * (dist - params.luv)) / (pow(dist, 3))
+                + (params.kuv1 * (xi - xj) * (yi - yj)) / pow(dist, 2);
+        }
+
+        return ret;
+    }
+
+    double partial_fy_x(ForceDirectedParams& params, 
+        TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent) {
+        auto xi = get_xy(i).first, xj = get_xy(j).first,
+            yi = get_xy(i).second, yj = get_xy(j).second;
+
+        double dist = distance_between(i, j);
+
+        // Compute partial derivative of electrical force
+        double ret = (3 * params.kuv2 * (xi - xj) * (yi - yj)) / pow(dist, 5);
+
+        // Compute pd of spring force
+        if (adjacent[i.GetId()].find(j.GetId()) != adjacent[i.GetId()].end()) {
+            ret += -(params.kuv1 * (yi - yj) * (xi - xj) * (dist - params.luv)) / (pow(dist, 3))
+                + (params.kuv1 * (yi - yj) * (xi - xj)) / pow(dist, 2);
+        }
+
+        return ret;
+    }
+
+    double partial_fy_y(ForceDirectedParams& params, 
+        TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent) {
+        auto yi = get_xy(i).second, yj = get_xy(j).second;
+        double dist = distance_between(i, j);
+
+        // Compute partial derivative of electrical force
+        double ret = (3 * params.kuv2 * pow(yi - yj, 2)) / pow(dist, 5)
+            - params.kuv2/pow(dist, 3);
+
+        // Compute pd of spring force
+        if (adjacent[i.GetId()].find(j.GetId()) != adjacent[i.GetId()].end()) {
+            ret += -params.kuv1 * (dist - params.luv) / dist
+                - (params.kuv1 * pow(yi - yj, 2) * (dist - params.luv)) / pow(dist, 3)
+                + (params.kuv1 * pow(yi - yj, 2)) / pow(dist, 2);
+        }
+
+        return ret;
+    }
+
+
+    void force_directed_layout_la(ForceDirectedParams& params, TNEANet& graph) {
+        /** Implement Eades' spring layout algorithm via a Newton-Raphson Iteration */
+        // Critical: Assumes node IDs are 0, 1, 2, ...
+
+        // For each n, there is an x and y
+        const int num_nodes = graph.GetNodes(),
+            jacobian_dim = 2 * graph.GetNodes();
+
+        // Layout points randomly
+        random_layout(graph);
+        std::map<int, VertexSet> adjacent = adjacency_list(graph); // Optimization
+
+        VectorXd pos(jacobian_dim);
+
+        // Populate position vector
+        for (auto i = 0; i < num_nodes; i++) {
+            auto v_pos = get_xy(graph.GetNI(i));
+            pos(2 * i) = v_pos.first;
+            pos(2 * i + 1) = v_pos.second;
+        }
+
+        while (true) {
+            MatrixXd jacobian(jacobian_dim, jacobian_dim);
+            VectorXd forces(jacobian_dim);
+
+            // Populate force vector
+            for (auto i = 0; i < num_nodes; i++) {
+                auto force = calculate_force(params, graph, graph.GetNI(i), adjacent);
+
+                // xi
+                forces(2 * i) = force.first;
+
+                // yi
+                forces((2 * i) + 1) = force.second;
+            }
+
+            // Populate the matrix
+            for (auto i = 0; i < num_nodes; i++) { // Iterate over rows
+                auto vertex_i = graph.GetNI(i);
+
+                // Iterate over columns
+                for (int j = 0; j < num_nodes; j++) {
+                    auto vertex_j = graph.GetNI(j);
+
+                    if (j == i) {
+                        jacobian(2 * i, 2 * j) = 0;
+                        jacobian(2 * i, (2 * j) + 1) = 0;
+                        jacobian((2 * i) + 1, 2 * j) = 0;
+                        jacobian((2 * i) + 1, (2 * j) + 1) = 0;
+                    }
+                    else {
+                        // Partial fx wrt x
+                        jacobian(2 * i, 2 * j) = partial_fx_x(params, vertex_i, vertex_j, adjacent);
+
+                        // Partial fx wrt y
+                        jacobian(2 * i, (2 * j) + 1) = partial_fx_y(params, vertex_i, vertex_j, adjacent);
+
+                        // Partial fy wrt x
+                        jacobian((2 * i) + 1, 2 * j) = partial_fy_x(params, vertex_i, vertex_j, adjacent);
+
+                        // Partial fy wrt y
+                        jacobian((2 * i) + 1, (2 * j) + 1) = partial_fy_y(params, vertex_i, vertex_j, adjacent);
+                    }
+                }
+            }
+
+            auto temp = pos;
+            VectorXd jif = jacobian.inverse() * forces;
+            pos = pos - jif;
+
+            for (int i = 0; i < num_nodes; i++) {
+                graph.AddFltAttrDatN(graph.GetNI(i), pos(2 * i), "x");
+                graph.AddFltAttrDatN(graph.GetNI(i), pos(2 * i + 1), "y");
+            }
+
+            std::cout << jacobian << std::endl <<
+                "Jacobian Inverse" << jacobian.inverse() << std::endl <<
+                "JIF" << jif << std::endl <<
+                "Forces" << std::endl << forces << std::endl <<
+                "Position" << std::endl << temp << std::endl << std::endl;
+            
+            bool converge = true;
+            for (int i = 0; i < jacobian_dim; i++)
+                if (abs(temp(i) - pos(i)) > 0.01) converge = false;
+
+            if (converge) break;
+        }
     }
 
     SVG::SVG draw_graph(TNEANet& graph, const double width) {

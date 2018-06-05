@@ -29,12 +29,13 @@ int main(int argc, char** argv) {
     int m = result["vertices"].as<int>(),
         n = result["to"].as<int>();
 
-    ForceDirectedParams params = { 400, 2, 1 };
+    ForceDirectedParams params = { 400, 0, 1 };
 
     if (n < m) n = m;
     try {
         for (int i = m; i <= n; i++) {
-            auto graph = tree();
+            auto graph = complete(i);
+            /*
             std::vector<SVG::SVG> frames = force_directed_layout(params, graph);
 
             if (side_by_side) {
@@ -59,6 +60,12 @@ int main(int argc, char** argv) {
                 std::ofstream graph_out(file + std::to_string(i) + ".svg");
                 graph_out << std::string(final_svg);
             }
+            */
+
+            force_directed_layout_la(params, graph);
+            auto final_svg = draw_graph(graph);
+            std::ofstream graph_out(file);
+            graph_out << std::string(final_svg);
         }
     }
     catch (std::runtime_error& err) {

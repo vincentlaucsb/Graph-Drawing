@@ -2,6 +2,10 @@
 \usepackage[margin=1.25in]{geometry}
 \usepackage{graphicx,float}
 
+%Biblatex
+\usepackage[backend=biber,style=numeric]{biblatex}
+\addbibresource{bibtex.bib}
+
 % Figures
 \usepackage{amsmath,amsthm,amsfonts}
 \usepackage{rotating}
@@ -36,11 +40,15 @@
 \tableofcontents
 
 \chapter{Introduction}
-Graph theory is one of the most widely applicable fields of math, and as such there has been a large demand for different methods of visualizing graphs. Just as the types and uses of graphs are wide and varied, there are also a variety of different algorithms for visualizing graphs. These algorithms vary in the type of graphs they will draw, and they guarantees they may provide, e.g. planarity and symmetry.
+Graph theory is one of the most widely applicable fields of math, and as such there has been a large demand for different methods of visualizing graphs. Just as the types and uses of graphs are wide and varied, there are also a variety of different algorithms for visualizing graphs. These algorithms vary in the type of graphs they will draw, and the guarantees they may provide, e.g. planarity and symmetry. This paper will further explore some of the algorithms detailed by \textit{Graph Drawing: Algorithms for the Visualization of Graphs}. \cite[see][page 12]{Battista:1998:GDA:551884}
+
+\bigskip
+
+All proofs, and associated errors, are my own unless otherwise noted.
 
 \section{Computer Science Basics}
 Although this is a paper on applied math,\footnote{As the author claims} because it also focuses on the analysis of algorithms, some computer science fundamentals are required.
-
+ 
 \subsection{Complexity}
 When analyzing algorithms, one feature we want to analyze is how complicated they can get as the input size $n$ increases. For example, suppose we want to count the number of occurrences of 5 in an unsorted list. Because the list is unsorted, we do not know in general where the 5's are so we have to scan every item in the list. Hence, the running time $T(n)$ of this algorithm is based on the size of the list $n$ and we say this algorithm runs in in linear time.
 
@@ -266,7 +274,7 @@ Unfortunately, as shown earlier (note to self: show earlier), locally minimizing
 
 \subsection{Aesthetic Trees}
 
-In the algorithm below, the problem of drawing a tree is formulated as a linear program. The problem is drawing a tree can be described as finding the narrowest possible drawing such that it matches several aesthetics:
+In the algorithm below, the problem of drawing a tree is formulated as a linear program.\cite{supowit1983complexity} Although linear time algorithms exist for drawing trees, they do not necessarily produce ``nice'' drawings. In Supowit and Reingold's paper, the problem of drawing a tree can be described as finding the narrowest possible drawing such that it matches several aesthetics:
 \begin{enumerate}
     \item \textbf{Layering} All nodes at the same level, i.e. the number of edges between a node and the root, share the same y-coordinate
     \item \textbf{Child Positioning} Each left child is placed strictly to the left of its parent, and each right child is placed strictly to the right of its parent
@@ -277,6 +285,10 @@ In the algorithm below, the problem of drawing a tree is formulated as a linear 
 \end{enumerate}
 
 As Theorem \ref{tree_lp_planar} shows, enforcing aesthetics 1, 2 and 3 are sufficient to guarantee 5.
+
+\bigskip
+
+By formulating the problem using linear programming, the time complexity of tree drawing can be reduced to polynomial time.\cite{supowit1983complexity}
 
 \subsection{Formal Description}
 First, define $f$ to be a mapping from a tree's vertex set to $\mathbb{R}^2$. Trivially, we can satisfy Aesthetic 1 by defining $f_y(n) = -i$ where $i$ is the level of node $n$. Then, we use a linear program to determine the value of $f_x(n)$. We will introduce two auxiliary variables $x_{max}$ and $x_{min}$ which give the left and right bounds for the x-coordinates of our drawing respectively. Hence, our goal of creating the narrowest possible drawing may be expressed as 
@@ -384,7 +396,10 @@ Because, corresponding subtrees in isomorphic trees are also isomorphic, the equ
     \end{proof}
 \end{theorem}
 
-\begin{corollary}[Number of Constraints of a Perfect Tree]
+\begin{theorem}[Number of Constraints of a Perfect Tree]
+    For a perfect tree of height $h$, this algorithm requires
+    \[ \left( 4\sum_{i=0}^h 2^i \right) - 2h - 2^{h+1} - 3 \]
+     constraints.
     
     \begin{proof}
         To begin, in a perfect binary tree, the number of nodes at every level doubles. Hence, in a perfect tree of height $h$, there are 
@@ -412,11 +427,15 @@ Because, corresponding subtrees in isomorphic trees are also isomorphic, the equ
             (2^1 - 1) + ... + (2^{h - 1} - 1) = t - (2^h + h + 1)
         \]
         constraints for this aesthetic.
+        
+        \bigskip
+        
+        Adding this all up, we get $4t - 2h - 2^{h+1} - 3$ constraints.
     \end{proof}
-\end{corollary}
+\end{theorem}
 
 \subsection{Implementation}
-In this paper, this algorithm was implemented as a C++ program based around the GNU Linear Programming Kit (GLPK)--an open-source linear optimizer based on the simplex method. Each node (in the C++ implementation--struct TreeNode) was represented as a data structure as follows:
+In this paper, this algorithm was implemented as a C++ program based around the GNU Linear Programming Kit (GLPK)--an open-source linear optimizer based on the simplex method.\cite{glpk} Each node (in the C++ implementation--struct TreeNode) was represented as a data structure as follows:
 
 \begin{labeling}{alligator}
     \item [left]  Pointer to left child
@@ -524,7 +543,11 @@ As mentioned by the paper's authors, there is some debate about whether or not t
 \end{figure}
 
 \subsubsection{Rank of a Tree}
-In order to efficiently draw isomorphic trees identically, we define a function $rank()$ which assigns a unique integer to every binary tree. We must be careful and note that this number is unique among trees of the same size, as trees of different size may be assigned the same number. Hence, we can say two subtrees are isomorphic if they have the same size and rank. For even $n$, there are $B_n = \frac{ \binom{2n}{n} }{ n + 1 }$ different binary trees, so we can say $rank(t)$ is a mapping from the trees $t$ of size $n$ to the integers $1, 2, ..., B_n$.
+In order to efficiently draw isomorphic trees identically, we define a function $rank()$ which assigns a unique integer to every binary tree. We must be careful and note that this number is unique among trees of the same size, as trees of different size may be assigned the same number. Hence, we can say two subtrees are isomorphic if they have the same size and rank.
+
+\bigskip
+
+Knott showed that this function is one-to-one (among trees of the same size) and that the numbering it generated corresponded to an ordering among trees.~\cite{Knott:1977:NSB:359423.359434} For even $n$, there are $B_n = \frac{ \binom{2n}{n} }{ n + 1 }$ different binary trees, so we can say $rank(t)$ is a mapping from the trees $t$ of size $n$ to the integers $1, 2, ..., B_n$.
 \begin{algorithm}[H]
     \caption{Tree Layout -- Calculating the Rank of Each Node}
     \begin{algorithmic}[1]
@@ -559,7 +582,7 @@ Force directed algorithms attempt to draw graphs by relating them to some physic
 Although there are plenty of force-directed algorithms, they all have the final result of mapping the vertices of a graph to $\mathbb{R}^2$. Hence, we saw that each vertex $v$ in a graph gets mapped to some point $p_v = (x_v, y_v)$. 
 
 \section{Eades' Spring System}
-In this algorithm, edges are modeled as springs while vertices are viewed as electrical forces which repel each other. Formally, the force on each vertex $v$ is 
+In this algorithm, edges are modeled as springs while vertices are viewed as electrical forces which repel each other.~\cite{eades1984heuristic} Formally, the force on each vertex $v$ is 
 \[
     F(v) = \sum_{(u, v) \in E} f_{uv} + \sum_{(u, v) \in V \times V} g_{uv}
 \]
@@ -580,47 +603,8 @@ A very simple algorithm for finding the system's equilibrium is to move each ver
     \caption{The complete graph $K_8$}
 \end{figure}
 
-\subsection{Newton-Raphson Iteration}
-\subsubsection{If Only Electrical Force Is Involved}
-\[
-\begin{aligned}
-% ix wrt xj
-\frac{ \partial{F_{xi}} }{ \partial{x_j} } &=
-\dfrac{3k_{uv}^{(2)}\left( x_i - x_j \right)^2}{d(v_i, v_j)^5} -
-\dfrac{k_{uv}^{(2)}}{d(v_i, v_j)^3} \\
-% ix wrt yj
-\frac{ \partial{F_{xi}} }{ \partial{y_j} } &= 
-\dfrac{3k_{uv}^{(2)}\left( x_i - x_j \right)\left( y_i - y_j \right)}{d(v_i, v_j)^5} \\
-% iy wrt xj
-\frac{ \partial{F_{yi}} }{ \partial{x_j} } &= 
-\dfrac{3k_{uv}^{(2)}\left( y_i - y_j \right)\left( x_i - x_j \right)}{d(v_i, v_j)^5} \\
-% iy wrt yj
-\frac{ \partial{F_{yi}} }{ \partial{y_j} } &= 
-\dfrac{3k_{uv}^{(2)}\left( y_i - y_j \right)^2}{d(v_i, v_j)^5} -
-\dfrac{k_{uv}^{(2)}}{d(v_i, v_j)^3}
-\end{aligned}
-\]
-
-\subsubsection{If Only Spring Force Is Involved}
-% ix wrt xj
-\[\begin{aligned}
-\frac{ \partial{F_{xi}} }{ \partial{x_j} } &= 
--\dfrac{k_{uv}^{(1)}\left( d(v_i, v_j) -l_\text{uv}\right)}{d(v_i, v_j)}-\dfrac{k_{uv}^{(1)}\left( x_i - x_j \right)^2\left(d(v_i, v_j)-l_\text{uv}\right)}{d(v_i, v_j)^3} 
-+\dfrac{k_{uv}^{(1)}\left( x_i - x_j \right)^2}{ d(v_i, v_j)^2 } \\
-% ix wrt yj
-\frac{ \partial{F_{xi}} }{ \partial{y_j} } &= 
--\dfrac{k_{uv}^{(1)}\left(x_\text{i}-x_\text{j}\right)\left( y_i - y_j \right)\left(d(v_i, v_j)-l_\text{uv}\right)}{d(v_i, v_j)^3}+\dfrac{k_{uv}^{(1)}\left(x_\text{i}-x_\text{j}\right)\left( y_i - y_j \right)}{ d(v_i, v_j)^2 } \\
-% iy wrt xj
-\frac{ \partial{F_{yi}} }{ \partial{x_j} } &= 
--\dfrac{k_{uv}^{(1)}\left(y_\text{i}-y_\text{j}\right)\left(x_i - x_j\right)\left(d(v_i, v_j)-l_\text{uv}\right)}{d(v_i, v_j)^3}+\dfrac{k_{uv}^{(1)}\left(y_\text{i}-y_\text{j}\right)\left( x_i - x_j \right)}{ d(v_i, v_j)^2 } \\
-% iy wrt yj
-\frac{ \partial{F_{yi}} }{ \partial{y_j} } &= 
--\dfrac{k_{uv}^{(1)}\left(d(v_i, v_j)-l_\text{uv}\right)}{d(v_i, v_j)}-\dfrac{k_{uv}^{(1)} \left(y_j - y_i\right)^2 \left(d(v_i, v_j)-l_\text{uv}\right)}{d(v_i, v_j)^3} 
-+\dfrac{k_{uv}^{(1)} \left(y_j - y_i\right)^2 }{ d(v_i, v_j)^2 }\\
-\end{aligned}\]
-
 \section{Tutte's Barycenter Method}
-An early force directed drawing method was Tutte's Barycenter Method. In this method, the force on every vertex $v$ is given by 
+An early force directed drawing method was Tutte's Barycenter Method.~\cite{tutte1963draw} In this method, the force on every vertex $v$ is given by 
 
 \begin{equation}\label{eq:barycenter}
 F(v) = \sum_{(u, v) \in E} (p_u - p_v)
@@ -649,7 +633,7 @@ Suppose for some free vertex $v$, we denote the set of fixed neighbors as $N_0$,
     \end{aligned}
 \end{equation}
 
-Hence, for every free vertex, there is a pair of equations (one for x, and one for y). These equations are linear, and after labeling the free vertices $v_1, ..., v_n$, we may rewrite them as the matrix multiplications described in (5) and (6) below. Notice the $M$ is an $n \times n$ diagonally dominant matrix. The first fact can be observed by inspecting \ref{eqn:barycenter_linear}, and the second occurs because the diagonal consists of vertex degrees, while the other entries $M_{ij}$ are either -1's (if $x_i$ and $x_j$ are neighbors) or 0's if they aren't.
+Hence, for every free vertex, there is a pair of equations (one for x, and one for y). These equations are linear, and after labeling the free vertices $v_1, ..., v_n$, we may rewrite them as the matrix multiplications described in (5) and (6) below. Notice the $M$ is an $n \times n$ diagonally dominant matrix. The first fact can be observed by inspecting \ref{eqn:barycenter_linear}, and the second occurs because the diagonal consists of vertex degrees, while the other entries $M_{ij}$ are either -1's (if $x_i$ and $x_j$ are neighbors) or 0's if they aren't. Formally, this matrix $M$ is known as the \textbf{Laplacian} of the graph.
 
 \begin{equation}\label{eqn:barycenter_matrix}
     M_{ij} = \begin{cases}
@@ -695,10 +679,11 @@ and the y coordinates by solving
 \subsection{Example: Hypercube}
 A simple example for which Tutte's method gives aesthetically pleasing results is the hypercube.
 
-\begin{figure}[H]\label{fig:hypercube}
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.5\linewidth]{"report/prism_4".pdf}
     \caption{The hypercube $Q_3$}
+    \label{fig:hypercube}
 \end{figure}
 
 In Figure \ref{fig:hypercube} the hypercube is placed in 500 x 500 pixel grid. The grid is governed by a simple Cartesian coordinate system, where the top left and bottom right corners have coordinates $(-250, 0)$ and $(250, 250)$ respectively. Four vertices are fixed and laid out into a circle of radius 250 centered at the origin. Hence, the bulk of the work performed algorithm is done in placing the center four free vertices. Labeling the free vertices as $x_1, x_2, x_3, x_4$, we may represent the task of laying out the free vertices with this matrix
@@ -752,7 +737,7 @@ The below Newton-Raphson Iteration is easy to code and is reasonably fast. Howev
 \end{algorithm}
 
 \subsubsection{Linear System}
-Of course, with a computer linear algebra package, one can also solve the corresponding linear system directly. In practice, this tends to be significantly faster than the previous algorithm.
+Of course, with a computer linear algebra package (such as Eigen for C++),~\cite{eigen} one can also solve the corresponding linear system directly. In practice, this tends to be significantly faster than the previous algorithm.
 
 \begin{algorithm}[H]
     \caption{Barycenter Layout (Linear Algebra)}\label{barycenter_la}
@@ -1124,21 +1109,6 @@ with
     \end{bmatrix} 
 \]
 
-\begin{thebibliography}{9}
-    \bibitem{latexcompanion} 
-    Michel Goossens, Frank Mittelbach, and Alexander Samarin. 
-    \textit{The \LaTeX\ Companion}. 
-    Addison-Wesley, Reading, Massachusetts, 1993.
-    
-    \bibitem{einstein} 
-    Albert Einstein. 
-    \textit{Zur Elektrodynamik bewegter K{\"o}rper}. (German) 
-    [\textit{On the electrodynamics of moving bodies}]. 
-    Annalen der Physik, 322(10):891–921, 1905.
-    
-    \bibitem{knuthwebsite} 
-    Knuth: Computers and Typesetting,
-    \\\texttt{http://www-cs-faculty.stanford.edu/\~{}uno/abcde.html}
-\end{thebibliography}
+\printbibliography
 
 \end{document}

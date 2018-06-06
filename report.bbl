@@ -1,0 +1,229 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 2.7 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \sortlist[entry]{nty/global/}
+    \entry{Battista:1998:GDA:551884}{book}{}
+      \name{author}{4}{}{%
+        {{hash=74debcc6fe099035395fa36fad76adf7}{%
+           family={Battista},
+           family_i={B\bibinitperiod},
+           given={Giuseppe\bibnamedelima Di},
+           given_i={G\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=fae722db5adb8b8f106abce55dd6b794}{%
+           family={Eades},
+           family_i={E\bibinitperiod},
+           given={Peter},
+           given_i={P\bibinitperiod}}}%
+        {{hash=73002fbcaa8fe0ee76011401f23f2ab3}{%
+           family={Tamassia},
+           family_i={T\bibinitperiod},
+           given={Roberto},
+           given_i={R\bibinitperiod}}}%
+        {{hash=47522b07e88f2e0da39c67bb0caecd7a}{%
+           family={Tollis},
+           family_i={T\bibinitperiod},
+           given={Ioannis\bibnamedelima G.},
+           given_i={I\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Upper Saddle River, NJ, USA}%
+      }
+      \list{publisher}{1}{%
+        {Prentice Hall PTR}%
+      }
+      \strng{namehash}{9e785344a36f9b6b58e8686e63baae5b}
+      \strng{fullhash}{25053b459d41b995eb66ef690a82d0d7}
+      \field{sortinit}{B}
+      \field{sortinithash}{4ecbea03efd0532989d3836d1a048c32}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{1st}
+      \field{isbn}{0133016153}
+      \field{title}{Graph Drawing: Algorithms for the Visualization of Graphs}
+      \field{year}{1998}
+    \endentry
+    \entry{eades1984heuristic}{article}{}
+      \name{author}{1}{}{%
+        {{hash=fae722db5adb8b8f106abce55dd6b794}{%
+           family={Eades},
+           family_i={E\bibinitperiod},
+           given={Peter},
+           given_i={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{fae722db5adb8b8f106abce55dd6b794}
+      \strng{fullhash}{fae722db5adb8b8f106abce55dd6b794}
+      \field{sortinit}{E}
+      \field{sortinithash}{fefc5210ef4721525b2a478df41efcd4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Congressus numerantium}
+      \field{title}{A heuristic for graph drawing}
+      \field{volume}{42}
+      \field{year}{1984}
+      \field{pages}{149\bibrangedash 160}
+      \range{pages}{12}
+    \endentry
+    \entry{eigen}{software}{}
+      \true{moreauthor}
+      \true{morelabelname}
+      \name{author}{2}{}{%
+        {{hash=7e5bcd36580f35d5ed03092201959472}{%
+           family={Guennebaud},
+           family_i={G\bibinitperiod},
+           given={Gael},
+           given_i={G\bibinitperiod}}}%
+        {{hash=73f11c7544252601f7e8c5f614c660f2}{%
+           family={Jacob},
+           family_i={J\bibinitperiod},
+           given={Benoit},
+           given_i={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{e5007976c950b53b554b9fdef533216d}
+      \strng{fullhash}{5638f8672d26f67ce6a044ed5a1a78c7}
+      \field{sortinit}{G}
+      \field{sortinithash}{1c854ef9177a91bf894e66485bdbd3ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Eigen: a C++ linear algebra library}
+      \field{version}{3.3.4}
+      \field{year}{2017-06-17}
+      \verb{url}
+      \verb http://eigen.tuxfamily.org/
+      \endverb
+    \endentry
+    \entry{Knott:1977:NSB:359423.359434}{article}{}
+      \name{author}{1}{}{%
+        {{hash=b840ac7934a171b7fcebde7848662e57}{%
+           family={Knott},
+           family_i={K\bibinitperiod},
+           given={Gary\bibnamedelima D.},
+           given_i={G\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York, NY, USA}%
+      }
+      \list{publisher}{1}{%
+        {ACM}%
+      }
+      \strng{namehash}{b840ac7934a171b7fcebde7848662e57}
+      \strng{fullhash}{b840ac7934a171b7fcebde7848662e57}
+      \field{sortinit}{K}
+      \field{sortinithash}{a7d5b3aec5a0890aae7baf85a209abfc}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0001-0782}
+      \field{journaltitle}{Commun. ACM}
+      \field{month}{02}
+      \field{number}{2}
+      \field{title}{A Numbering System for Binary Trees}
+      \field{volume}{20}
+      \field{year}{1977}
+      \field{pages}{113\bibrangedash 115}
+      \range{pages}{3}
+      \verb{doi}
+      \verb 10.1145/359423.359434
+      \endverb
+      \verb{url}
+      \verb http://doi.acm.org/10.1145/359423.359434
+      \endverb
+      \keyw{binary search trees,binary trees,permutations,ranking function}
+    \endentry
+    \entry{glpk}{software}{}
+      \name{author}{1}{}{%
+        {{hash=7192836fdd36f9dd14a49f8d5c300a33}{%
+           family={Makhorin},
+           family_i={M\bibinitperiod},
+           given={Andrew},
+           given_i={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{7192836fdd36f9dd14a49f8d5c300a33}
+      \strng{fullhash}{7192836fdd36f9dd14a49f8d5c300a33}
+      \field{sortinit}{M}
+      \field{sortinithash}{2684bec41e9697b92699b46491061da2}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{day}{16}
+      \field{month}{02}
+      \field{title}{GNU Linear Programming Kit}
+      \field{version}{4.64}
+      \field{year}{2018}
+      \verb{url}
+      \verb https://www.gnu.org/software/glpk/
+      \endverb
+    \endentry
+    \entry{supowit1983complexity}{article}{}
+      \name{author}{2}{}{%
+        {{hash=4d09d23dec657f154fde48f666133213}{%
+           family={Supowit},
+           family_i={S\bibinitperiod},
+           given={Kenneth\bibnamedelima J},
+           given_i={K\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=ea91301f0b7aa01aac1305e64a1b8a0e}{%
+           family={Reingold},
+           family_i={R\bibinitperiod},
+           given={Edward\bibnamedelima M},
+           given_i={E\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{add29a313e332c02739218331595ad51}
+      \strng{fullhash}{add29a313e332c02739218331595ad51}
+      \field{sortinit}{S}
+      \field{sortinithash}{fd1e7c5ab79596b13dbbb67f8d70fb5a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Acta Informatica}
+      \field{number}{4}
+      \field{title}{The complexity of drawing trees nicely}
+      \field{volume}{18}
+      \field{year}{1983}
+      \field{pages}{377\bibrangedash 392}
+      \range{pages}{16}
+    \endentry
+    \entry{tutte1963draw}{article}{}
+      \name{author}{1}{}{%
+        {{hash=9f6a4e9855ad2305a28bdb3f2cf52e7a}{%
+           family={Tutte},
+           family_i={T\bibinitperiod},
+           given={William\bibnamedelima Thomas},
+           given_i={W\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Wiley Online Library}%
+      }
+      \strng{namehash}{9f6a4e9855ad2305a28bdb3f2cf52e7a}
+      \strng{fullhash}{9f6a4e9855ad2305a28bdb3f2cf52e7a}
+      \field{sortinit}{T}
+      \field{sortinithash}{423d138a005a533b47e6475e39378bf2}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Proceedings of the London Mathematical Society}
+      \field{number}{1}
+      \field{title}{How to draw a graph}
+      \field{volume}{3}
+      \field{year}{1963}
+      \field{pages}{743\bibrangedash 767}
+      \range{pages}{25}
+    \endentry
+  \endsortlist
+\endrefsection
+\endinput
+

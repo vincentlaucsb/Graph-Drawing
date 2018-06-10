@@ -59,8 +59,8 @@ add_library(force_directed
 target_link_libraries(force_directed snap)
 
 ## executables
-add_executable(example src/demo-TNEANet.cpp)
-target_link_libraries(example snap force_directed)
+add_executable(eades84 src/eades84.cpp)
+target_link_libraries(eades84 snap force_directed)
 
 add_executable(animate_spring src/animate_spring.cpp)
 target_link_libraries(animate_spring snap force_directed)

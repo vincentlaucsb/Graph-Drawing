@@ -11,7 +11,6 @@ namespace force_directed {
     double partial_fy_x(ForceDirectedParams& params, TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent);
     double partial_fy_y(ForceDirectedParams& params, TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent);
 
-
     void random_layout(TNEANet& graph) {
         std::default_random_engine generator;
         std::uniform_real_distribution<double> distribution(0.0, 500.0);
@@ -23,6 +22,74 @@ namespace force_directed {
             graph.AddFltAttrDatN(node, distribution(generator), "x");
             graph.AddFltAttrDatN(node, distribution(generator), "y");
         }
+    }
+
+    VertexPos eades84(TUNGraph& graph) {
+        using AdjacencyList = std::map<int, std::set<int>>;
+        AdjacencyList adj, not_adj;
+        VertexPos pos;
+
+        // Compute adjacency list
+        for (auto e = graph.BegEI(); e != graph.EndEI(); e++) {
+            adj[e.GetSrcNId()].insert(e.GetDstNId());
+            adj[e.GetDstNId()].insert(e.GetSrcNId());
+        }
+
+        // Compute non-adjacency list
+        for (auto& pair : adj) {
+            auto& u = pair.first;
+            auto& u_adj = pair.second;
+
+            for (auto v = graph.BegNI(); v != graph.EndNI(); v++) {
+                int v_id = v.GetId();
+                if ((u_adj.find(v_id) == u_adj.end()) &&
+                    u != v_id) not_adj[u].insert(v_id);
+            }
+        }
+
+        // Iterate over vertices, assigning random coordinates
+        std::default_random_engine generator;
+        std::uniform_real_distribution<double> distribution(0.0, 500.0);
+        auto points = SVG::util::polar_points(graph.GetNodes(), 0, 0, 500);
+
+        auto points_it = points.begin();
+
+        for (auto u = graph.BegNI(); u != graph.EndNI(); u++) {
+            pos[u.GetId()] = *points_it;
+            points_it++;
+            // pos[u.GetId()] = std::make_pair(distribution(generator), distribution(generator));
+        }
+
+        const double c1 = 2.0, c2 = 1.0, c3 = 1.0, c4 = 0.1;
+        const int m = 100;
+
+        for (int i = 0; i < m; i++) {
+            // Calculate force on each vertex
+            for (auto u = graph.BegNI(); u != graph.EndNI(); u++) {
+                double force = 0;
+                int u_id = u.GetId();
+
+                // Iterate over adjacent vertices
+                for (auto& v : adj[u_id]) {
+                    force += c1 * log(
+                        sqrt(pow(pos[u_id].first - pos[v].first, 2)
+                            + pow(pos[u_id].second - pos[v].second, 2))
+                        / c2);
+                }
+
+                // Iterate over non-adjacent vertices
+                for (auto& v : not_adj[u_id]) {
+                    force += c3 / sqrt(sqrt(pow(pos[u_id].first - pos[v].first, 2)
+                        + pow(pos[u_id].second - pos[v].second, 2)));
+                }
+
+                // Move vertex
+                pos[u_id].first += (c4 * force);
+                pos[u_id].second += (c4 * force);
+            }
+        }
+
+        return pos;
     }
 
     inline double distance_between(TNEANet& graph, int id1, int id2) {
@@ -332,6 +399,34 @@ namespace force_directed {
 
         for (auto node = graph.BegNI(); node < graph.EndNI(); node++) {
             auto coord = get_xy(node);
+            nodes[node.GetId()] = vertices->add_child<SVG::Circle>(coord, circle_radius);
+        };
+
+        for (auto edge = graph.BegEI(); edge < graph.EndEI(); edge++) {
+            edges->add_child<SVG::Line>(
+                nodes[edge.GetSrcNId()]->x(),
+                nodes[edge.GetDstNId()]->x(),
+                nodes[edge.GetSrcNId()]->y(),
+                nodes[edge.GetDstNId()]->y()
+                );
+        }
+
+        return root;
+    }
+
+    SVG::SVG draw_graph(TUNGraph& graph, VertexPos& pos, const double width) {
+        SVG::SVG root;
+        auto edges = root.add_child<SVG::Group>(), vertices = root.add_child<SVG::Group>();
+        edges->set_attr("stroke", "black").set_attr("stroke-width", "1px");
+
+        // Map IDs to nodes
+        std::map<int, SVG::Circle*> nodes;
+        const double circle_radius = std::max(5.0, width / 50);
+
+
+        // Draw vertices
+        for (auto node = graph.BegNI(); node < graph.EndNI(); node++) {
+            auto coord = pos[node.GetId()];
             nodes[node.GetId()] = vertices->add_child<SVG::Circle>(coord, circle_radius);
         };
 

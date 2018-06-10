@@ -115,6 +115,29 @@ namespace force_directed {
         return graph;
     }
 
+    TUNGraph hypercube_un() {
+        TUNGraph graph;
+        for (int i = 0; i < 8; i++)
+            graph.AddNode(i);
+
+        graph.AddEdge(0, 1);
+        graph.AddEdge(1, 2);
+        graph.AddEdge(2, 3);
+        graph.AddEdge(0, 3);
+
+        graph.AddEdge(0, 4);
+        graph.AddEdge(1, 5);
+        graph.AddEdge(2, 6);
+        graph.AddEdge(3, 7);
+
+        graph.AddEdge(4, 5);
+        graph.AddEdge(5, 6);
+        graph.AddEdge(6, 7);
+        graph.AddEdge(7, 4);
+
+        return graph;
+    }
+
     // Hypercube of Order 4
     TNEANet hypercube_4() {
         TNEANet graph;
@@ -145,21 +168,54 @@ namespace force_directed {
         return graph;
     }
 
-    TNEANet tree() {
-        // Binary tree of height 2
+    TUNGraph tree(int height) {
+        // Ternary tree of specified height
+        std::map<int, std::vector<int>> children;
+        std::deque<int> work = { 0 };
+
+        int total_nodes = 0;
+        for (int level = 0; level <= height; level++)
+            total_nodes += pow(3, level);
+
+        int current_node = 1, current_parent;
+        while (!work.empty() && current_node < total_nodes) {
+            current_parent = work.front();
+            work.pop_front();
+
+            children[current_parent] = { current_node, current_node + 1, current_node + 2 };
+            work.push_back(current_node);
+            work.push_back(current_node + 1);
+            work.push_back(current_node + 2);
+            current_node += 3;
+        }
+
+        TUNGraph graph;
+        for (int j = 0; j < current_node; j++) graph.AddNode(j);
+
+        for (auto& edge : children) {
+            for (auto& dest : edge.second) {
+                graph.AddEdge(edge.first, dest);
+            }
+        }
         
-        TNEANet graph;
-        for (int i = 0; i < 7; i++)
+        return graph;
+    }
+
+    TUNGraph wheel_un(int n) {
+        TUNGraph graph;
+
+        for (int i = 0; i <= n; i++)
             graph.AddNode(i);
 
-        graph.AddEdge(0, 1);
-        graph.AddEdge(0, 2);
+        // Perimeter of wheel
+        for (int i = 0; i + 1 < n; i++)
+            graph.AddEdge(i, i + 1);
 
-        graph.AddEdge(1, 3);
-        graph.AddEdge(1, 4);
+        graph.AddEdge(n - 1, 0); // Complete the perimeter cycle
 
-        graph.AddEdge(2, 5);
-        graph.AddEdge(2, 6);
+                                 // Spokes
+        for (int i = 0; i < n; i++)
+            graph.AddEdge(i, n);
 
         return graph;
     }

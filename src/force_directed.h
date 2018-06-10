@@ -12,6 +12,7 @@
 #include <set>
 
 namespace force_directed {
+    using VertexPos = std::map<int, SVG::Point>;
     using SVG::Point;
     using Eigen::MatrixXd;
     using Eigen::VectorXd;
@@ -35,7 +36,10 @@ namespace force_directed {
     std::pair<double, double> get_xy(TNEANet& graph, int id);
     std::pair<double, double> get_xy(TNEANet::TNodeI node);
     SVG::SVG draw_graph(TNEANet& graph, const double width = 500);
+    SVG::SVG draw_graph(TUNGraph& graph, VertexPos& pos, const double width = 500);
     void random_layout(TNEANet& graph);
+
+    VertexPos eades84(TUNGraph& graph);
     std::vector<SVG::SVG> force_directed_layout(ForceDirectedParams& params, TNEANet& graph);
     void force_directed_layout_la(ForceDirectedParams& params, TNEANet& graph);
     std::vector<SVG::SVG> barycenter_layout(TNEANet& graph,
@@ -56,10 +60,12 @@ namespace force_directed {
     TNEANet complete_bipartite(int m, int n);
     TNEANet complete(int nodes);
     TNEANet prism(int n);
+    TUNGraph wheel_un(int n);
+    TUNGraph hypercube_un();
     TNEANet wheel(int n);
     TNEANet ladder(int);
     TNEANet petersen();
     TNEANet hypercube();
     TNEANet hypercube_4();
-    TNEANet tree();
+    TUNGraph tree(int height);
 }

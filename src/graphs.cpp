@@ -91,31 +91,7 @@ namespace force_directed {
         return graph;
     }
 
-    // Hypercube of Order 2
-    TNEANet hypercube() {
-        TNEANet graph;
-        for (int i = 0; i < 8; i++)
-            graph.AddNode(i);
-
-        graph.AddEdge(0, 1);
-        graph.AddEdge(1, 2);
-        graph.AddEdge(2, 3);
-        graph.AddEdge(0, 3);
-
-        graph.AddEdge(0, 4);
-        graph.AddEdge(1, 5);
-        graph.AddEdge(2, 6);
-        graph.AddEdge(3, 7);
-
-        graph.AddEdge(4, 5);
-        graph.AddEdge(5, 6);
-        graph.AddEdge(6, 7);
-        graph.AddEdge(7, 4);
-
-        return graph;
-    }
-
-    TUNGraph hypercube_un() {
+    TUNGraph hypercube() {
         TUNGraph graph;
         for (int i = 0; i < 8; i++)
             graph.AddNode(i);
@@ -284,28 +260,5 @@ namespace force_directed {
         }
 
         return graph;
-    }
-
-    void prism_distances(int min, int max) {
-        // Print out distances between points in a prism
-        std::cout << "Distance between fixed vertices and their adjacent free vertex on a prism drawn "
-            "in the unit square" << std::endl <<
-            "n/actual distance/theoretical upper bound" << std::endl;
-
-        for (int i = min; i <= max; i++) {
-            auto graph = prism(i);
-            barycenter_layout_la(graph, i, 1);
-            auto x1 = get_xy(graph, 0),
-                x2 = get_xy(graph, i);
-
-            // Distance between x1 and x2
-            std::cout << i << "/" << sqrt(
-                pow((x2.first - x1.first), 2) +
-                pow((x2.second - x1.second), 2));
-
-            // Theoretical
-            std::cout << "/" << (1.0 - 1.0/(3.0 - 2.0 * cos((2.0 * PI)/(double)i)));
-            std::cout << std::endl;
-        }
     }
 }

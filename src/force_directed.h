@@ -63,7 +63,6 @@ namespace force_directed {
     EdgeSet incident_edges(int id, const TNEANet& graph);
     VertexSet adjacent_vertices(int id, const TNEANet& graph);
     std::map<int, VertexSet> adjacency_list(const TNEANet& graph);
-    void prism_distances(int min = 3, int max = 10);
 
     // Functions for creating graphs
     TNEANet cycle(int nodes);
@@ -71,11 +70,10 @@ namespace force_directed {
     TNEANet complete(int nodes);
     TNEANet prism(int n);
     TUNGraph wheel_un(int n);
-    TUNGraph hypercube_un();
+    TUNGraph hypercube();
     TNEANet wheel(int n);
     TNEANet ladder(int);
     TNEANet petersen();
-    TNEANet hypercube();
     TUNGraph hypercube_4();
     TUNGraph tree(int height);
     TUNGraph three_reg_6();

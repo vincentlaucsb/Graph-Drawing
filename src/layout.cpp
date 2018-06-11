@@ -129,25 +129,19 @@ namespace force_directed {
 
             // Iterate over adjacent vertices
             for (auto adj : adjacent[node]) {
-                sum_x += kuv1 * (distance_between(pos, adj, node) - luv) *
-                    (pos[node].first - pos[adj].first) /
-                    (distance_between(pos, adj, node));
-
-                sum_y += kuv1 * (distance_between(pos, adj, node) - luv) *
-                    (pos[node].second - pos[adj].second) /
-                    (distance_between(pos, adj, node));
+                double length = distance_between(pos, adj, node);
+                sum_x += kuv1 * (length - luv) * (pos[node].first - pos[adj].first) / length;
+                sum_y += kuv1 * (length - luv) * (pos[node].second - pos[adj].second) / length;
             }
 
             // Iterate over vertices X vertices
             for (auto vertex = graph.BegNI(); vertex < graph.EndNI(); vertex++) {
                 int v_id = vertex.GetId();
+                double dist = distance_between(pos, v_id, node);
 
                 if (node != vertex.GetId()) {
-                    sum_x += (kuv2 / pow(distance_between(pos, vertex.GetId(), node), 2)) *
-                        (pos[node].first - pos[v_id].first) / distance_between(pos, v_id, node);
-
-                    sum_y += (kuv2 / pow(distance_between(pos, vertex.GetId(), node), 2)) *
-                        (pos[node].second - pos[v_id].second) / distance_between(pos, v_id, node);
+                    sum_x += (kuv2 / pow(dist, 2)) * (pos[node].first - pos[v_id].first) / dist;
+                    sum_y += (kuv2 / pow(dist, 2)) * (pos[node].second - pos[v_id].second) / dist;
                 }
             }
 
@@ -192,7 +186,8 @@ namespace force_directed {
         ret.push_back(draw_graph(graph, pos)); // Record initial positions
 
         bool move = true;
-        while (move) {
+        const int MAX_ITERATIONS = 1000;
+        for (int i = 0; move && i < MAX_ITERATIONS; i++) {
             for (auto node = graph.BegNI(); node < graph.EndNI(); node++) {
                 auto force = eades84_helper::calculate_force(params, graph, node.GetId(), adjacent, pos);
                 forces[node] = force;

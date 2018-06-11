@@ -1,39 +1,51 @@
 #include "force_directed.h"
+#include <chrono>
 
 namespace force_directed {
-    // Helpers for spring force directed layout
-    Point calculate_force(ForceDirectedParams& params, TNEANet& graph, TNEANet::TNodeI& node,
-        std::map<int, VertexSet>& adjacent);
-    double distance_between(TNEANet& graph, int id1, int id2);
-    double distance_between(TNEANet::TNodeI& v1, TNEANet::TNodeI& v2);
-    double partial_fx_x(ForceDirectedParams& params, TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent);
-    double partial_fx_y(ForceDirectedParams& params, TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent);
-    double partial_fy_x(ForceDirectedParams& params, TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent);
-    double partial_fy_y(ForceDirectedParams& params, TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent);
-
-    void random_layout(TNEANet& graph) {
-        std::default_random_engine generator;
-        std::uniform_real_distribution<double> distribution(0.0, 500.0);
-
-        for (TNEANet::TNodeI node = graph.BegNI();
-            node < graph.EndNI(); node++) {
-
-            // Random coordinates
-            graph.AddFltAttrDatN(node, distribution(generator), "x");
-            graph.AddFltAttrDatN(node, distribution(generator), "y");
-        }
-    }
-
-    VertexPos eades84(TUNGraph& graph) {
-        using AdjacencyList = std::map<int, std::set<int>>;
-        AdjacencyList adj, not_adj;
+    VertexPos random_layout(TUNGraph& graph) {
         VertexPos pos;
 
+        // Iterate over vertices, assigning random coordinates
+        typedef std::chrono::high_resolution_clock myclock;
+        myclock::time_point beginning = myclock::now();
+
+        // obtain a seed from the timer
+        myclock::duration d = myclock::now() - beginning;
+        unsigned seed = d.count();
+
+        std::mt19937 generator(seed);
+        std::uniform_real_distribution<double> distribution(0.0, 500.0);
+
+        for (auto u = graph.BegNI(); u != graph.EndNI(); u++)
+            pos[u.GetId()] = std::make_pair(distribution(generator), distribution(generator));
+
+        return pos;
+    }
+
+    std::vector<SVG::SVG> eades84(TUNGraph& graph) {
+        VertexPos pos = random_layout(graph);
+        return eades84(graph, pos);
+    }
+
+    std::vector<SVG::SVG> eades84_2(ForceDirectedParams& params, TUNGraph& graph) {
+        VertexPos pos = random_layout(graph);
+        return eades84_2(params, graph, pos);
+    }
+
+    AdjacencyList adjacency_list(TUNGraph& graph) {
         // Compute adjacency list
+        AdjacencyList adj;
         for (auto e = graph.BegEI(); e != graph.EndEI(); e++) {
             adj[e.GetSrcNId()].insert(e.GetDstNId());
             adj[e.GetDstNId()].insert(e.GetSrcNId());
         }
+
+        return adj;
+    }
+
+    std::vector<SVG::SVG> eades84(TUNGraph& graph, VertexPos& pos) {
+        AdjacencyList adj = adjacency_list(graph), not_adj;
+        std::vector<SVG::SVG> ret;
 
         // Compute non-adjacency list
         for (auto& pair : adj) {
@@ -47,21 +59,11 @@ namespace force_directed {
             }
         }
 
-        // Iterate over vertices, assigning random coordinates
-        std::default_random_engine generator;
-        std::uniform_real_distribution<double> distribution(0.0, 500.0);
-        auto points = SVG::util::polar_points(graph.GetNodes(), 0, 0, 500);
-
-        auto points_it = points.begin();
-
-        for (auto u = graph.BegNI(); u != graph.EndNI(); u++) {
-            pos[u.GetId()] = *points_it;
-            points_it++;
-            // pos[u.GetId()] = std::make_pair(distribution(generator), distribution(generator));
-        }
-
         const double c1 = 2.0, c2 = 1.0, c3 = 1.0, c4 = 0.1;
         const int m = 100;
+
+        // Initial positions
+        ret.push_back(draw_graph(graph, pos));
 
         for (int i = 0; i < m; i++) {
             // Calculate force on each vertex
@@ -71,7 +73,7 @@ namespace force_directed {
 
                 // Iterate over adjacent vertices
                 for (auto& v : adj[u_id]) {
-                    force += c1 * log(
+                    force += c1 * log10(
                         sqrt(pow(pos[u_id].first - pos[v].first, 2)
                             + pow(pos[u_id].second - pos[v].second, 2))
                         / c2);
@@ -87,20 +89,11 @@ namespace force_directed {
                 pos[u_id].first += (c4 * force);
                 pos[u_id].second += (c4 * force);
             }
+
+            ret.push_back(draw_graph(graph, pos));
         }
 
-        return pos;
-    }
-
-    inline double distance_between(TNEANet& graph, int id1, int id2) {
-        return distance_between(graph.GetNI(id1), graph.GetNI(id2));
-    }
-
-    inline double distance_between(TNEANet::TNodeI& node1, TNEANet::TNodeI& node2) {
-        return sqrt(
-            pow(get_xy(node1).first - get_xy(node2).first, 2) +
-            pow(get_xy(node1).second - get_xy(node2).second, 2)
-        );
+        return ret;
     }
 
     inline Point get_xy(TNEANet& graph, int id) {
@@ -119,35 +112,47 @@ namespace force_directed {
         return Point(x, y);
     }
 
-    inline Point calculate_force(ForceDirectedParams& params, TNEANet& graph, TNEANet::TNodeI& node,
-        std::map<int, VertexSet>& adjacent) {
-        // Calculate the force on one node
-        double sum_x = 0, sum_y = 0;
-        double& luv = params.luv, kuv1 = params.kuv1, kuv2 = params.kuv2;
-
-        // Iterate over adjacent vertices
-        for (auto adj : adjacent[node.GetId()]) {
-            sum_x += kuv1 * (distance_between(graph, adj, node.GetId()) - luv) *
-                (get_xy(node).first - get_xy(graph, adj).first) /
-                (distance_between(graph, adj, node.GetId()));
-
-            sum_y += kuv1 * (distance_between(graph, adj, node.GetId()) - luv) *
-                (get_xy(node).second - get_xy(graph, adj).second) /
-                (distance_between(graph, adj, node.GetId()));
+    namespace eades84_helper {
+        double distance_between(VertexPos& pos, int node1, int node2) {
+            auto &pos1 = pos[node1], &pos2 = pos[node2];
+            return sqrt(
+                pow(pos1.first - pos2.first, 2) +
+                pow(pos1.second - pos2.second, 2)
+            );
         }
 
-        // Iterate over vertices X vertices
-        for (auto vertex = graph.BegNI(); vertex < graph.EndNI(); vertex++) {
-            if (node.GetId() != vertex.GetId()) {
-                sum_x += (kuv2 / pow(distance_between(vertex, node), 2)) *
-                    (get_xy(node).first - get_xy(vertex).first) / distance_between(vertex, node);
+        Point calculate_force(ForceDirectedParams& params, TUNGraph& graph, int node,
+            AdjacencyList& adjacent, VertexPos& pos) {
+            // Calculate the force on one node
+            double sum_x = 0, sum_y = 0;
+            double& luv = params.luv, kuv1 = params.kuv1, kuv2 = params.kuv2;
 
-                sum_y += (kuv2 / pow(distance_between(vertex, node), 2)) *
-                    (get_xy(node).second - get_xy(vertex).second) / distance_between(vertex, node);
+            // Iterate over adjacent vertices
+            for (auto adj : adjacent[node]) {
+                sum_x += kuv1 * (distance_between(pos, adj, node) - luv) *
+                    (pos[node].first - pos[adj].first) /
+                    (distance_between(pos, adj, node));
+
+                sum_y += kuv1 * (distance_between(pos, adj, node) - luv) *
+                    (pos[node].second - pos[adj].second) /
+                    (distance_between(pos, adj, node));
             }
-        }
 
-        return std::make_pair(sum_x, sum_y);
+            // Iterate over vertices X vertices
+            for (auto vertex = graph.BegNI(); vertex < graph.EndNI(); vertex++) {
+                int v_id = vertex.GetId();
+
+                if (node != vertex.GetId()) {
+                    sum_x += (kuv2 / pow(distance_between(pos, vertex.GetId(), node), 2)) *
+                        (pos[node].first - pos[v_id].first) / distance_between(pos, v_id, node);
+
+                    sum_y += (kuv2 / pow(distance_between(pos, vertex.GetId(), node), 2)) *
+                        (pos[node].second - pos[v_id].second) / distance_between(pos, v_id, node);
+                }
+            }
+
+            return std::make_pair(sum_x, sum_y);
+        }
     }
 
     EdgeSet incident_edges(int id, const TNEANet& graph) {
@@ -179,20 +184,17 @@ namespace force_directed {
         return ret;
     }
 
-    std::vector<SVG::SVG> force_directed_layout(ForceDirectedParams& params, TNEANet& graph) {
+    std::vector<SVG::SVG> eades84_2(ForceDirectedParams& params, TUNGraph& graph, VertexPos& pos) {
         /** Use Eades' spring layout algorithm, creating a frame between each iteration */
         std::vector<SVG::SVG> ret;
-
-        // Layout points randomly
-        random_layout(graph);
-        std::map<TNEANet::TNodeI, Point> forces;
-        std::map<int, VertexSet> adjacent = adjacency_list(graph); // Optimization
+        AdjacencyList adjacent = adjacency_list(graph); // Optimization
+        std::map<TUNGraph::TNodeI, Point> forces;
+        ret.push_back(draw_graph(graph, pos)); // Record initial positions
 
         bool move = true;
         while (move) {
             for (auto node = graph.BegNI(); node < graph.EndNI(); node++) {
-                auto coord = get_xy(node);
-                auto force = calculate_force(params, graph, node, adjacent);
+                auto force = eades84_helper::calculate_force(params, graph, node.GetId(), adjacent, pos);
                 forces[node] = force;
             }
 
@@ -206,186 +208,20 @@ namespace force_directed {
             // Move nodes...
             for (auto force : forces) {
                 // ... in the direction of the force by a distance proportional to the magnitude of the force
+                auto &force_x = force.second.first, &force_y = force.second.second;
+                auto node = force.first.GetId();
                 double pct = 0.1;
-                if (isnan(force.second.first)) throw std::runtime_error("Failed to converge");
-                graph.AddFltAttrDatN(force.first,
-                    get_xy(force.first).first - pct * force.second.first, "x");
-                graph.AddFltAttrDatN(force.first,
-                    get_xy(force.first).second - pct * force.second.second, "y");
+
+                if (isnan(force_x)) throw std::runtime_error("Failed to converge");
+                pos[node].first -= pct * force_x;
+                pos[node].second -= pct * force_y;
             }
 
             // Add frame
-            ret.push_back(draw_graph(graph));
+            ret.push_back(draw_graph(graph, pos));
         }
 
         return ret;
-    }
-
-    double partial_fx_x(ForceDirectedParams& params, 
-        TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent) {
-        auto xi = get_xy(i).first, xj = get_xy(j).first;
-
-        double dist = distance_between(i, j);
-        
-        // Compute partial derivative of electrical force
-        double ret = (3 * params.kuv2 * pow(xi - xj, 2))/pow(dist, 5)
-            - params.kuv2/pow(dist, 3);
-
-        // Compute pd of spring force
-        if (adjacent[i.GetId()].find(j.GetId()) != adjacent[i.GetId()].end()) {
-            ret += -params.kuv1 * (dist - params.luv)/dist
-                - (params.kuv1 * pow(xi - xj, 2) * (dist - params.luv))/pow(dist, 3)
-                + (params.kuv1 * pow(xi - xj, 2)) /pow(dist, 2);
-        }
-
-        return ret;
-    }
-
-    double partial_fx_y(ForceDirectedParams& params, 
-        TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent) {
-        auto xi = get_xy(i).first, xj = get_xy(j).first,
-            yi = get_xy(i).second, yj = get_xy(j).second;
-
-        double dist = distance_between(i, j);
-
-        // Compute partial derivative of electrical force
-        double ret = (3 * params.kuv2 * (xi - xj) * (yi - yj)) / pow(dist, 5);
-
-        // Compute pd of spring force
-        if (adjacent[i.GetId()].find(j.GetId()) != adjacent[i.GetId()].end()) {
-            ret += -(params.kuv1 * (xi - xj) * (yi - yj) * (dist - params.luv)) / (pow(dist, 3))
-                + (params.kuv1 * (xi - xj) * (yi - yj)) / pow(dist, 2);
-        }
-
-        return ret;
-    }
-
-    double partial_fy_x(ForceDirectedParams& params, 
-        TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent) {
-        auto xi = get_xy(i).first, xj = get_xy(j).first,
-            yi = get_xy(i).second, yj = get_xy(j).second;
-
-        double dist = distance_between(i, j);
-
-        // Compute partial derivative of electrical force
-        double ret = (3 * params.kuv2 * (xi - xj) * (yi - yj)) / pow(dist, 5);
-
-        // Compute pd of spring force
-        if (adjacent[i.GetId()].find(j.GetId()) != adjacent[i.GetId()].end()) {
-            ret += -(params.kuv1 * (yi - yj) * (xi - xj) * (dist - params.luv)) / (pow(dist, 3))
-                + (params.kuv1 * (yi - yj) * (xi - xj)) / pow(dist, 2);
-        }
-
-        return ret;
-    }
-
-    double partial_fy_y(ForceDirectedParams& params, 
-        TNEANet::TNodeI& i, TNEANet::TNodeI& j, std::map<int, VertexSet>& adjacent) {
-        auto yi = get_xy(i).second, yj = get_xy(j).second;
-        double dist = distance_between(i, j);
-
-        // Compute partial derivative of electrical force
-        double ret = (3 * params.kuv2 * pow(yi - yj, 2)) / pow(dist, 5)
-            - params.kuv2/pow(dist, 3);
-
-        // Compute pd of spring force
-        if (adjacent[i.GetId()].find(j.GetId()) != adjacent[i.GetId()].end()) {
-            ret += -params.kuv1 * (dist - params.luv) / dist
-                - (params.kuv1 * pow(yi - yj, 2) * (dist - params.luv)) / pow(dist, 3)
-                + (params.kuv1 * pow(yi - yj, 2)) / pow(dist, 2);
-        }
-
-        return ret;
-    }
-
-
-    void force_directed_layout_la(ForceDirectedParams& params, TNEANet& graph) {
-        /** Implement Eades' spring layout algorithm via a Newton-Raphson Iteration */
-        // Critical: Assumes node IDs are 0, 1, 2, ...
-
-        // For each n, there is an x and y
-        const int num_nodes = graph.GetNodes(),
-            jacobian_dim = 2 * graph.GetNodes();
-
-        // Layout points randomly
-        random_layout(graph);
-        std::map<int, VertexSet> adjacent = adjacency_list(graph); // Optimization
-
-        VectorXd pos(jacobian_dim);
-
-        // Populate position vector
-        for (auto i = 0; i < num_nodes; i++) {
-            auto v_pos = get_xy(graph.GetNI(i));
-            pos(2 * i) = v_pos.first;
-            pos(2 * i + 1) = v_pos.second;
-        }
-
-        while (true) {
-            MatrixXd jacobian(jacobian_dim, jacobian_dim);
-            VectorXd forces(jacobian_dim);
-
-            // Populate force vector
-            for (auto i = 0; i < num_nodes; i++) {
-                auto force = calculate_force(params, graph, graph.GetNI(i), adjacent);
-
-                // xi
-                forces(2 * i) = force.first;
-
-                // yi
-                forces((2 * i) + 1) = force.second;
-            }
-
-            // Populate the matrix
-            for (auto i = 0; i < num_nodes; i++) { // Iterate over rows
-                auto vertex_i = graph.GetNI(i);
-
-                // Iterate over columns
-                for (int j = 0; j < num_nodes; j++) {
-                    auto vertex_j = graph.GetNI(j);
-
-                    if (j == i) {
-                        jacobian(2 * i, 2 * j) = 0;
-                        jacobian(2 * i, (2 * j) + 1) = 0;
-                        jacobian((2 * i) + 1, 2 * j) = 0;
-                        jacobian((2 * i) + 1, (2 * j) + 1) = 0;
-                    }
-                    else {
-                        // Partial fx wrt x
-                        jacobian(2 * i, 2 * j) = partial_fx_x(params, vertex_i, vertex_j, adjacent);
-
-                        // Partial fx wrt y
-                        jacobian(2 * i, (2 * j) + 1) = partial_fx_y(params, vertex_i, vertex_j, adjacent);
-
-                        // Partial fy wrt x
-                        jacobian((2 * i) + 1, 2 * j) = partial_fy_x(params, vertex_i, vertex_j, adjacent);
-
-                        // Partial fy wrt y
-                        jacobian((2 * i) + 1, (2 * j) + 1) = partial_fy_y(params, vertex_i, vertex_j, adjacent);
-                    }
-                }
-            }
-
-            auto temp = pos;
-            VectorXd jif = jacobian.inverse() * forces;
-            pos = pos - jif;
-
-            for (int i = 0; i < num_nodes; i++) {
-                graph.AddFltAttrDatN(graph.GetNI(i), pos(2 * i), "x");
-                graph.AddFltAttrDatN(graph.GetNI(i), pos(2 * i + 1), "y");
-            }
-
-            std::cout << jacobian << std::endl <<
-                "Jacobian Inverse" << jacobian.inverse() << std::endl <<
-                "JIF" << jif << std::endl <<
-                "Forces" << std::endl << forces << std::endl <<
-                "Position" << std::endl << temp << std::endl << std::endl;
-            
-            bool converge = true;
-            for (int i = 0; i < jacobian_dim; i++)
-                if (abs(temp(i) - pos(i)) > 0.01) converge = false;
-
-            if (converge) break;
-        }
     }
 
     SVG::SVG draw_graph(TNEANet& graph, const double width) {

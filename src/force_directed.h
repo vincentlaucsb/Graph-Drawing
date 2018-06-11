@@ -12,6 +12,7 @@
 #include <set>
 
 namespace force_directed {
+    using AdjacencyList = std::map<int, std::set<int>>;
     using VertexPos = std::map<int, SVG::Point>;
     using SVG::Point;
     using Eigen::MatrixXd;
@@ -37,11 +38,19 @@ namespace force_directed {
     std::pair<double, double> get_xy(TNEANet::TNodeI node);
     SVG::SVG draw_graph(TNEANet& graph, const double width = 500);
     SVG::SVG draw_graph(TUNGraph& graph, VertexPos& pos, const double width = 500);
-    void random_layout(TNEANet& graph);
+    
+    VertexPos random_layout(TUNGraph&);
+    std::vector<SVG::SVG> eades84(TUNGraph& graph);
+    std::vector<SVG::SVG> eades84(TUNGraph& graph, VertexPos& pos);
+    std::vector<SVG::SVG> eades84_2(ForceDirectedParams& params, TUNGraph& graph);
+    std::vector<SVG::SVG> eades84_2(ForceDirectedParams& params, TUNGraph& graph, VertexPos& pos);
 
-    VertexPos eades84(TUNGraph& graph);
-    std::vector<SVG::SVG> force_directed_layout(ForceDirectedParams& params, TNEANet& graph);
-    void force_directed_layout_la(ForceDirectedParams& params, TNEANet& graph);
+    namespace eades84_helper {
+        double distance_between(VertexPos& pos, int node1, int node2);
+        Point calculate_force(ForceDirectedParams& params, TUNGraph& graph, int node,
+            AdjacencyList& adjacent, VertexPos& pos);
+    }
+    
     std::vector<SVG::SVG> barycenter_layout(TNEANet& graph,
         const size_t fixed_vertices = 5, const double width = 500);
     BarycenterLayout barycenter_layout_la(TNEANet& graph, const size_t fixed_vertices, const double width = 500);
@@ -50,6 +59,7 @@ namespace force_directed {
     using EdgeSet = std::set<TNEANet::TEdgeI>;
     using VertexSet = std::set<int>;
 
+    AdjacencyList adjacency_list(TUNGraph& graph);
     EdgeSet incident_edges(int id, const TNEANet& graph);
     VertexSet adjacent_vertices(int id, const TNEANet& graph);
     std::map<int, VertexSet> adjacency_list(const TNEANet& graph);
@@ -66,6 +76,7 @@ namespace force_directed {
     TNEANet ladder(int);
     TNEANet petersen();
     TNEANet hypercube();
-    TNEANet hypercube_4();
+    TUNGraph hypercube_4();
     TUNGraph tree(int height);
+    TUNGraph three_reg_6();
 }

@@ -27,16 +27,89 @@ int main(int argc, char** argv) {
     // auto graph = TSnap::GenStar<PUNGraph>(m, false);
     // auto graph = tree();
     // auto graph_ptr = TSnap::GenFull<PUNGraph>(m);
-    auto graph_ptr = TSnap::GenRndDegK(m, 3);
-    auto& graph = *graph_ptr;
+    // auto graph_ptr = TSnap::GenRndDegK(6, 3);
+    // auto& graph = *graph_ptr;
     // auto graph = hypercube_un();
     // auto graph = wheel_un(m);
     // auto graph = tree(m);
 
+    // Good results
+    // auto graph = three_reg_6();
+    auto graph = hypercube_4();
+
+    /* For regular cube
+    VertexPos pos = {
+        { 0, { 0, 0 } },
+        { 1, { 200, 0 } },
+        { 2, { 200, -200 } },
+        { 3, { 0, -200 } },
+        { 4, { 100, 100 } },
+        { 5, { 300, 100 } },
+        { 6, { 300, -100 } },
+        { 7, { 100, -100 } }
+    };
+
+    VertexPos pos = {
+        { 0, { 0, 0 } },
+        { 1, { 200, 0 } },
+        { 2, { 180, -200 } },
+        { 3, { 0, -200 } },
+        { 4, { 100, 100 } },
+        { 5, { 300, 100 } },
+        { 6, { 300, -80 } },
+        { 7, { 100, -100 } }
+    };*/
+
+    VertexPos pos = {
+        { 0, { 0, 0 } },
+        { 1, { 200, 0 } },
+        { 2, { 200, -200 } },
+        { 3, { 0, -200 } },
+        { 4, { 100, 100 } },
+        { 5, { 300, 100 } },
+        { 6, { 300, -100 } },
+        { 7, { 100, -100 } }, // 
+        { 8, { 0 + 400, 0 + 100 } },
+        { 9, { 200 + 400, 0 + 100 } },
+        { 10, { 200 + 400, -200 + 100 } },
+        { 11, { 0 + 400, -200 + 100 } },
+        { 12, { 100 + 400, 100 + 100 } },
+        { 13, { 300 + 400, 100 + 100 } },
+        { 14, { 300 + 400, -100 + 100 } },
+        { 15, { 100 + 400, -100 + 100 } }
+    };
+
+    /*
+    VertexPos pos = {
+        { 0,{ 0, 0 } },
+        { 1,{ 200, 0 } },
+        { 2,{ 200, -200 } },
+        { 3,{ 0, -200 } },
+        { 4,{ 100, 100 } },
+        { 5,{ 300, 100 } },
+        { 6,{ 300, -100 } },
+        { 7,{ 100, -100 } }, // 
+        { 8,{ -200, 0 } },
+        { 9,{ 400, 0 } },
+        { 10,{ 400, -400 } },
+        { 11,{ -200, -400 } },
+        { 12,{ -100, 200 } },
+        { 13,{ 400, 200 } },
+        { 14,{ 400, -300 } },
+        { 15,{ -100, -300 } }
+    };
+    */
+    
+    /*
+    auto points = SVG::util::polar_points(graph.GetNodes(), 0, 0, 100);
+    VertexPos pos;
+    for (int i = 0; i < graph.GetNodes(); i++) pos[i] = points[i];
+    */
+
     try {
-        auto final_pos = eades84(graph);
-        auto final_svg = draw_graph(graph, final_pos);
-        final_svg.autoscale();
+        auto final_pos = eades84(graph, pos);
+        // auto final_pos = eades84(graph);
+        auto final_svg = SVG::frame_animate(final_pos, 30);
         std::ofstream graph_out(file);
         graph_out << std::string(final_svg);
     }

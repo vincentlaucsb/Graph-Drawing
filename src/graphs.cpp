@@ -138,9 +138,9 @@ namespace force_directed {
         return graph;
     }
 
-    // Hypercube of Order 4
-    TNEANet hypercube_4() {
-        TNEANet graph;
+    TUNGraph hypercube_4() {
+        // Hypercube of Order 4
+        TUNGraph graph;
         for (int i = 0; i < 16; i++)
             graph.AddNode(i);
 
@@ -216,6 +216,28 @@ namespace force_directed {
                                  // Spokes
         for (int i = 0; i < n; i++)
             graph.AddEdge(i, n);
+
+        return graph;
+    }
+
+    TUNGraph three_reg_6() {
+        // 3-regular graph on 6 vertices
+        TUNGraph graph;
+        for (int i = 0; i < 6; i++) graph.AddNode(i);
+
+        graph.AddEdge(0, 1);
+        graph.AddEdge(0, 3);
+        graph.AddEdge(0, 5);
+
+        graph.AddEdge(1, 2);
+        graph.AddEdge(1, 4);
+
+        graph.AddEdge(2, 3);
+        graph.AddEdge(2, 5);
+
+        graph.AddEdge(3, 4);
+
+        graph.AddEdge(4, 5);
 
         return graph;
     }

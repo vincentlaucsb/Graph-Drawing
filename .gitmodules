@@ -4,3 +4,6 @@
 [submodule "lib/cxxopts"]
 	path = lib/cxxopts
 	url = https://github.com/jarro2783/cxxopts.git
+[submodule "lib/csv-parser"]
+	path = lib/csv-parser
+	url = https://github.com/vincentlaucsb/csv-parser.git

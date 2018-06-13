@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.9)
 set(CMAKE_CXX_STANDARD 14)
 project(Force_Directed_Drawing)
+
+set(CSV_DIR ${CMAKE_SOURCE_DIR}/lib/csv-parser/src)
 include_directories(
+	${CSV_DIR}/
 	${CMAKE_SOURCE_DIR}/lib/svg/src/
 	${CMAKE_SOURCE_DIR}/lib/cxxopts/include/
 	${CMAKE_SOURCE_DIR}/src/
@@ -58,12 +61,19 @@ add_library(force_directed
 )
 target_link_libraries(force_directed snap)
 
+add_library(csv_parser
+	${CSV_DIR}/csv_reader.cpp
+	${CSV_DIR}/csv_stat.cpp
+	${CSV_DIR}/csv_writer.cpp
+)
+target_include_directories(csv_parser PUBLIC CSV_DIR)
+
 ## executables
 add_executable(eades84 src/eades84.cpp)
 target_link_libraries(eades84 snap force_directed)
 
 add_executable(animate_spring src/animate_spring.cpp)
-target_link_libraries(animate_spring snap force_directed)
+target_link_libraries(animate_spring snap force_directed csv_parser)
 
 add_executable(animate_tutte src/animate_barycenter.cpp)
 target_link_libraries(animate_tutte snap force_directed)
@@ -75,6 +85,3 @@ add_executable(tree_paper src/tree.cpp src/tree_paper.cpp src/tree_draw.cpp)
 ## tree_lp
 add_executable(tree_lp src/tree_lp.cpp)
 target_link_libraries(tree_lp glpk)
-
-# add_executable(tree_test src/tree_lp.cpp tests/tree_tests.cpp)
-# target_link_libraries(tree_test glpk)

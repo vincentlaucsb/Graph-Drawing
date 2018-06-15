@@ -73,6 +73,7 @@ namespace force_directed {
     TUNGraph wheel(int n);
     TUNGraph ladder(int);
     TUNGraph petersen();
+    TUNGraph generalized_petersen(int n, int k);
     TUNGraph hypercube_4();
     TUNGraph tree(int height);
     TUNGraph three_reg_6();

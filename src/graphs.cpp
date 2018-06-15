@@ -61,7 +61,6 @@ namespace force_directed {
         return graph;
     }
 
-    // Petersen
     TUNGraph petersen() {
         TUNGraph graph;
         for (int i = 0; i < 10; i++)
@@ -87,6 +86,27 @@ namespace force_directed {
         graph.AddEdge(6, 8);
         graph.AddEdge(6, 9);
         graph.AddEdge(7, 9);
+
+        return graph;
+    }
+
+    TUNGraph generalized_petersen(int n, int k) {
+        TUNGraph graph;
+
+        // Vertex sets, where u is the outer vertex set
+        std::vector<int> u, v;
+
+        for (int i = 0; i < n * 2; i++) {
+            graph.AddNode(i);
+            if (i >= n) v.push_back(i);
+            else u.push_back(i);
+        }
+
+        for (int i = 0; i < n; i++) {
+            graph.AddEdge(u[i], u[(i + 1) % n]);
+            graph.AddEdge(u[i], v[i]);
+            graph.AddEdge(v[i], v[(i + k) % n]);
+        }
 
         return graph;
     }

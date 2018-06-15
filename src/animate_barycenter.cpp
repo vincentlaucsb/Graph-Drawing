@@ -1,5 +1,6 @@
 #include "force_directed.h"
 #include "cxxopts.hpp"
+#include <sstream>
 
 int main(int argc, char** argv) {
     using namespace force_directed;
@@ -14,6 +15,8 @@ int main(int argc, char** argv) {
     options.add_options("optional")
         ("h,hypercube", "Animate drawing a hypercube of order 3")
         ("p,petersen", "Animate drawing the Petersen graph", cxxopts::value<bool>()->default_value("false"))
+        ("g,generalized", "Animate drawing the Generalized Petersen graph GP(n, k)",
+            cxxopts::value<std::string>()->default_value(""))
         ("r,prism", "Animate drawing the Prism graph on n vertices", cxxopts::value<int>()->default_value("0"))
         ("k,complete", "Draw the complete graph on n vertices", cxxopts::value<int>()->default_value("0"))
         ("w,width", "Specify the width of the drawing", cxxopts::value<int>()->default_value("500"))
@@ -28,7 +31,9 @@ int main(int argc, char** argv) {
 
     auto result = options.parse(argc, (const char**&)argv);
 
-    std::string file = result["file"].as<std::string>();
+    std::string file = result["file"].as<std::string>(),
+        gp = result["generalized"].as<std::string>();
+
     bool _static = result["static"].as<bool>();
     int width = result["width"].as<int>();
     TUNGraph graph;
@@ -41,6 +46,19 @@ int main(int argc, char** argv) {
     else if (result["petersen"].as<bool>()) {
         graph = petersen();
         vertices = 5;
+    }
+    else if (!gp.empty()) {
+        int n = -1, k = -1;
+        std::stringstream ss(gp);
+        std::string num;
+
+        while (std::getline(ss, num, ',')) {
+            if (n < 0) n = std::stoi(num);
+            else k = std::stoi(num);
+        }
+
+        graph = generalized_petersen(n, k);
+        vertices = n;
     }
     else if (result["complete"].as<int>()) {
         graph = complete(result["complete"].as<int>());

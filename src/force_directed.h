@@ -34,9 +34,8 @@ namespace force_directed {
         VectorXd sol_y;
     };
 
-    std::pair<double, double> get_xy(TNEANet& graph, int id);
-    std::pair<double, double> get_xy(TNEANet::TNodeI node);
-    SVG::SVG draw_graph(TNEANet& graph, const double width = 500);
+    std::pair<double, double> get_xy(TUNGraph& graph, int id);
+    std::pair<double, double> get_xy(TUNGraph::TNodeI node);
     SVG::SVG draw_graph(TUNGraph& graph, VertexPos& pos, const double width = 500);
     
     VertexPos random_layout(TUNGraph&);
@@ -51,29 +50,29 @@ namespace force_directed {
             AdjacencyList& adjacent, VertexPos& pos);
     }
     
-    std::vector<SVG::SVG> barycenter_layout(TNEANet& graph,
+    std::vector<SVG::SVG> barycenter_layout(TUNGraph& graph,
         const size_t fixed_vertices = 5, const double width = 500);
-    BarycenterLayout barycenter_layout_la(TNEANet& graph, const size_t fixed_vertices, const double width = 500);
+    BarycenterLayout barycenter_layout_la(TUNGraph& graph,
+        const size_t fixed_vertices, const double width = 500);
 
     // Helpers
-    using EdgeSet = std::set<TNEANet::TEdgeI>;
+    using EdgeSet = std::set<TUNGraph::TEdgeI>;
     using VertexSet = std::set<int>;
 
     AdjacencyList adjacency_list(TUNGraph& graph);
-    EdgeSet incident_edges(int id, const TNEANet& graph);
-    VertexSet adjacent_vertices(int id, const TNEANet& graph);
-    std::map<int, VertexSet> adjacency_list(const TNEANet& graph);
+    EdgeSet incident_edges(int id, const TUNGraph& graph);
+    VertexSet adjacent_vertices(int id, const TUNGraph& graph);
+    std::map<int, VertexSet> adjacency_list(const TUNGraph& graph);
 
     // Functions for creating graphs
-    TNEANet cycle(int nodes);
-    TNEANet complete_bipartite(int m, int n);
-    TNEANet complete(int nodes);
-    TNEANet prism(int n);
-    TUNGraph wheel_un(int n);
+    TUNGraph cycle(int nodes);
+    TUNGraph complete_bipartite(int m, int n);
+    TUNGraph complete(int nodes);
+    TUNGraph prism(int n);
     TUNGraph hypercube();
-    TNEANet wheel(int n);
-    TNEANet ladder(int);
-    TNEANet petersen();
+    TUNGraph wheel(int n);
+    TUNGraph ladder(int);
+    TUNGraph petersen();
     TUNGraph hypercube_4();
     TUNGraph tree(int height);
     TUNGraph three_reg_6();

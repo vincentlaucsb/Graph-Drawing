@@ -96,22 +96,6 @@ namespace force_directed {
         return ret;
     }
 
-    inline Point get_xy(TNEANet& graph, int id) {
-        return get_xy(graph.GetNI(id));
-    }
-
-    inline Point get_xy(TNEANet::TNodeI node) {
-        TVec<TStr> attr_names;
-        TVec<TFlt> attr_vals;
-        node.GetFltAttrNames(attr_names);
-        node.GetFltAttrVal(attr_vals);
-
-        float x = attr_vals[attr_names.SearchForw("x")],
-            y = attr_vals[attr_names.SearchForw("y")];
-
-        return Point(x, y);
-    }
-
     namespace eades84_helper {
         double distance_between(VertexPos& pos, int node1, int node2) {
             auto &pos1 = pos[node1], &pos2 = pos[node2];
@@ -147,35 +131,6 @@ namespace force_directed {
 
             return std::make_pair(sum_x, sum_y);
         }
-    }
-
-    EdgeSet incident_edges(int id, const TNEANet& graph) {
-        /** Compute all edges incident to a vertex */
-        EdgeSet edges;
-        for (auto edge = graph.BegEI(); edge < graph.EndEI(); edge++)
-            if (edge.GetDstNId() == id || edge.GetSrcNId() == id) edges.insert(edge);
-        return edges;
-    }
-
-    VertexSet adjacent_vertices(int id, const TNEANet& graph) {
-        /** Compute all vertices adjacent to vertex with given id by iterating
-        *  through edge set
-        */
-        VertexSet ret;
-        auto edges = incident_edges(id, graph);
-        for (auto edge : edges) {
-            if (edge.GetDstNId() == id) ret.insert(edge.GetSrcNId());
-            else if (edge.GetSrcNId() == id) ret.insert(edge.GetDstNId());
-        }
-        return ret;
-    }
-
-    std::map<int, VertexSet> adjacency_list(const TNEANet& graph) {
-        /** Compute a graph's adjacency list */
-        std::map<int, VertexSet> ret;
-        for (auto node = graph.BegNI(); node < graph.EndNI(); node++)
-            ret[node.GetId()] = adjacent_vertices(node.GetId(), graph);
-        return ret;
     }
 
     std::vector<SVG::SVG> eades84_2(ForceDirectedParams& params, TUNGraph& graph, VertexPos& pos) {
@@ -219,32 +174,6 @@ namespace force_directed {
         return ret;
     }
 
-    SVG::SVG draw_graph(TNEANet& graph, const double width) {
-        SVG::SVG root;
-        auto edges = root.add_child<SVG::Group>(), vertices = root.add_child<SVG::Group>();
-        edges->set_attr("stroke", "black").set_attr("stroke-width", "1px");
-
-        // Map IDs to nodes
-        std::map<int, SVG::Circle*> nodes;
-        const double circle_radius = std::max(5.0, width / 50);
-
-        for (auto node = graph.BegNI(); node < graph.EndNI(); node++) {
-            auto coord = get_xy(node);
-            nodes[node.GetId()] = vertices->add_child<SVG::Circle>(coord, circle_radius);
-        };
-
-        for (auto edge = graph.BegEI(); edge < graph.EndEI(); edge++) {
-            edges->add_child<SVG::Line>(
-                nodes[edge.GetSrcNId()]->x(),
-                nodes[edge.GetDstNId()]->x(),
-                nodes[edge.GetSrcNId()]->y(),
-                nodes[edge.GetDstNId()]->y()
-                );
-        }
-
-        return root;
-    }
-
     SVG::SVG draw_graph(TUNGraph& graph, VertexPos& pos, const double width) {
         SVG::SVG root;
         auto edges = root.add_child<SVG::Group>(), vertices = root.add_child<SVG::Group>();
@@ -273,9 +202,10 @@ namespace force_directed {
         return root;
     }
 
-    std::vector<SVG::SVG> barycenter_layout(TNEANet& graph, const size_t fixed_vertices, const double width) {
+    std::vector<SVG::SVG> barycenter_layout(TUNGraph& graph, const size_t fixed_vertices, const double width) {
+        VertexPos pos;
         std::vector<SVG::SVG> ret;
-        std::set<TNEANet::TNodeI> fixed, free;
+        std::set<TUNGraph::TNodeI> fixed, free;
         std::vector<Point> polygon = SVG::util::polar_points((int)fixed_vertices, 0, 0, width/2);
 
         auto node = graph.BegNI();
@@ -284,21 +214,17 @@ namespace force_directed {
             fixed.insert(node);
 
             // Place along polygon
-            graph.AddFltAttrDatN(node, point->first, "x");
-            graph.AddFltAttrDatN(node, point->second, "y");
+            pos[node.GetId()] = std::make_pair(point->first, point->second);
             point++;
         }
 
         for (; node < graph.EndNI(); node++) {
             free.insert(node);
-
-            // Place free vertices at origin
-            graph.AddFltAttrDatN(node, 0, "x");
-            graph.AddFltAttrDatN(node, 0, "y");
+            pos[node.GetId()] = std::make_pair(0, 0); // Place free vertices at origin
         }
 
         // Draw initial positions
-        ret.push_back(draw_graph(graph));
+        ret.push_back(draw_graph(graph, pos));
 
         // Optimization: Keep a list of adjacent vertices
         std::map<int, VertexSet> adjacent = adjacency_list(graph);
@@ -307,21 +233,19 @@ namespace force_directed {
         do {
             converge = true;
             for (auto node : free) {
-                auto current_xy = get_xy(node);
+                int node_id = node.GetId();
+                auto current_xy = pos[node_id];
                 double sum_x = 0, sum_y = 0, new_x, new_y;
 
                 // Sum up adjacent vertices
-                for (auto u : adjacent[node.GetId()]) {
-                    auto u_xy = get_xy(graph.GetNI(u));
+                for (auto u : adjacent[node_id]) {
+                    auto u_xy = pos[u];
                     sum_x += u_xy.first;
                     sum_y += u_xy.second;
-                    // std::cout << "u_xy.first " << u_xy.first << " u_xy.second " << u_xy.second << std::endl;
                 }
 
-                new_x = (1 / (double)node.GetDeg()) * sum_x;
-                new_y = (1 / (double)node.GetDeg()) * sum_y;
-                graph.AddFltAttrDatN(node, new_x, "x");
-                graph.AddFltAttrDatN(node, new_y, "y");
+                pos[node_id].first = (1 / (double)node.GetDeg()) * sum_x;
+                pos[node_id].second = (1 / (double)node.GetDeg()) * sum_y;
 
                 // Convergence test
                 if (!(APPROX_EQUALS(new_x, current_xy.first, 0.01) && APPROX_EQUALS(new_y, current_xy.second, 0.01)))
@@ -329,26 +253,24 @@ namespace force_directed {
             }
 
             // Algorithm trace
-            ret.push_back(draw_graph(graph, width));
+            ret.push_back(draw_graph(graph, pos));
         } while (!converge);
 
         return ret;
     }
 
     BarycenterLayout barycenter_layout_la(
-        TNEANet& graph, const size_t fixed_vertices, const double width) {
+        TUNGraph& graph, const size_t fixed_vertices, const double width) {
         /** Solve the barycenter layout problem using linear algebra */
-        std::vector<TNEANet::TNodeI> fixed, free;
+        std::vector<TUNGraph::TNodeI> fixed, free;
         std::vector<Point> polygon = SVG::util::polar_points((int)fixed_vertices, 0, 0, width / 2);
+        VertexPos pos;
 
         auto node = graph.BegNI();
         auto point = polygon.begin();
         for (; (node < graph.EndNI()) && (fixed.size() < fixed_vertices); node++) {
             fixed.push_back(node);
-
-            // Place along polygon
-            graph.AddFltAttrDatN(node, point->first, "x");
-            graph.AddFltAttrDatN(node, point->second, "y");
+            pos[node.GetId()] = std::make_pair(point->first, point->second); // Place along polygon
             point++;
         }
 
@@ -371,9 +293,10 @@ namespace force_directed {
             // Sum up fixed vertices adjacent to our free boi
             double sum_x = 0, sum_y = 0;
             for (auto& f : fixed) {
-                if (free[i].IsNbrNId(f.GetId())) {
-                    sum_x += get_xy(f).first;
-                    sum_y += get_xy(f).second;
+                int f_id = f.GetId();
+                if (free[i].IsNbrNId(f_id)) {
+                    sum_x += pos[f_id].first;
+                    sum_y += pos[f_id].second;
                 }
             }
 
@@ -388,11 +311,9 @@ namespace force_directed {
         // std::cout << "The solution is:\n" << sol_x << std::endl;
 
         // Set graph positions
-        for (size_t i = 0; i < sol_x.size(); i++) {
-            graph.AddFltAttrDatN(free[i], sol_x(i), "x");
-            graph.AddFltAttrDatN(free[i], sol_y(i), "y");
-        }
+        for (size_t i = 0; i < sol_x.size(); i++)
+            pos[free[i].GetId()] = std::make_pair(sol_x(i), sol_y(i));
 
-        return { draw_graph(graph), points, x, y, sol_x, sol_y };
+        return { draw_graph(graph, pos), points, x, y, sol_x, sol_y };
     }
 }

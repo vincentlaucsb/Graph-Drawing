@@ -1,8 +1,8 @@
 #include "force_directed.h"
 
 namespace force_directed {
-    TNEANet cycle(int nodes) {
-        TNEANet graph;
+    TUNGraph cycle(int nodes) {
+        TUNGraph graph;
         for (int i = 0; i < nodes; i++)
             graph.AddNode(i);
 
@@ -14,9 +14,9 @@ namespace force_directed {
         return graph;
     }
 
-    TNEANet ladder(int rungs) {
+    TUNGraph ladder(int rungs) {
         // Ref: http://mathworld.wolfram.com/LadderGraph.html
-        TNEANet graph;
+        TUNGraph graph;
         graph.AddNode(0);
         graph.AddNode(1);
         graph.AddEdge(0, 1);
@@ -34,8 +34,8 @@ namespace force_directed {
         return graph;
     }
 
-    TNEANet complete(int nodes) {
-        TNEANet graph;
+    TUNGraph complete(int nodes) {
+        TUNGraph graph;
         for (int i = 0; i < nodes; i++)
             graph.AddNode(i);
 
@@ -47,8 +47,8 @@ namespace force_directed {
         return graph;
     }
 
-    TNEANet complete_bipartite(int m, int n) {
-        TNEANet graph;
+    TUNGraph complete_bipartite(int m, int n) {
+        TUNGraph graph;
         for (int i = 0; i < m + n; i++) graph.AddNode(i);
 
         for (int i = 0; i < m; i++) { // Iterate over left side
@@ -62,8 +62,8 @@ namespace force_directed {
     }
 
     // Petersen
-    TNEANet petersen() {
-        TNEANet graph;
+    TUNGraph petersen() {
+        TUNGraph graph;
         for (int i = 0; i < 10; i++)
             graph.AddNode(i);
 
@@ -177,25 +177,6 @@ namespace force_directed {
         return graph;
     }
 
-    TUNGraph wheel_un(int n) {
-        TUNGraph graph;
-
-        for (int i = 0; i <= n; i++)
-            graph.AddNode(i);
-
-        // Perimeter of wheel
-        for (int i = 0; i + 1 < n; i++)
-            graph.AddEdge(i, i + 1);
-
-        graph.AddEdge(n - 1, 0); // Complete the perimeter cycle
-
-                                 // Spokes
-        for (int i = 0; i < n; i++)
-            graph.AddEdge(i, n);
-
-        return graph;
-    }
-
     TUNGraph three_reg_6() {
         // 3-regular graph on 6 vertices
         TUNGraph graph;
@@ -218,8 +199,8 @@ namespace force_directed {
         return graph;
     }
 
-    TNEANet wheel(int n) {
-        TNEANet graph;
+    TUNGraph wheel(int n) {
+        TUNGraph graph;
 
         for (int i = 0; i <= n; i++)
             graph.AddNode(i);
@@ -237,8 +218,8 @@ namespace force_directed {
         return graph;
     }
 
-    TNEANet prism(int n) {
-        TNEANet graph;
+    TUNGraph prism(int n) {
+        TUNGraph graph;
 
         // Perimeter: 0 ... n - 1, Inner: n ... 2n - 1
         for (int i = 0; i < 2 * n; i++)

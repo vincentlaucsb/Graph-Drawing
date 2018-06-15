@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
     std::string file = result["file"].as<std::string>();
     bool _static = result["static"].as<bool>();
     int width = result["width"].as<int>();
-    TNEANet graph;
+    TUNGraph graph;
     size_t vertices;
     
     if (result["hypercube"].as<bool>()) {

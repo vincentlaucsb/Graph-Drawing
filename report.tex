@@ -777,6 +777,8 @@ Of course, with a computer linear algebra package (such as Eigen for C++),~\cite
 The prism graph $\Pi_{n}$ is a 3-connected graph constructed by taking the vertices and edges of an $n$-prism. From the perspective of this drawing algorithm, it allows us to investigate the symmetry and resolution properties. In this paper, and the proofs below, $\Pi_{n}$ will be drawn by using $n$ fixed vertices (equally spaced on the perimeter of a circle).
 
 \begin{figure}[H]
+    \centering
+    
     \begin{subfigure}{.3\textwidth}
         \includegraphics[width=\linewidth]{"report/prism_4".pdf}
     \end{subfigure}
@@ -786,6 +788,7 @@ The prism graph $\Pi_{n}$ is a 3-connected graph constructed by taking the verti
     \begin{subfigure}{.3\textwidth}
         \includegraphics[width=\linewidth]{"report/prism_6".pdf}
     \end{subfigure}
+
     \begin{subfigure}{.3\textwidth}
         \includegraphics[width=\linewidth]{"report/prism_7".pdf}
     \end{subfigure}
@@ -1041,8 +1044,37 @@ One the the main drawbacks of this algorithm is potentially poor resolution, i.e
     \end{proof}
 \end{theorem}
 
-\section{Appendix}
-\subsection{Barycenter Method: Petersen Graph}
+\chapter{Appendix}
+\section{Eades' Method Gallery}
+\subsection{Complete Graphs}
+\begin{figure}[H]
+    \centering
+    
+    \begin{subfigure}{.3\linewidth}
+    \includegraphics[width=\linewidth]{"report/eades/k4".pdf}
+    \end{subfigure}
+    \begin{subfigure}{.3\linewidth}
+    \includegraphics[width=\linewidth]{"report/eades/k5".pdf}
+    \end{subfigure}
+    \begin{subfigure}{.3\linewidth}
+    \includegraphics[width=\linewidth]{"report/eades/k6".pdf}
+    \end{subfigure}
+
+    \begin{subfigure}{.3\linewidth}
+    \includegraphics[width=\linewidth]{"report/eades/k7".pdf}
+    \end{subfigure}
+    \begin{subfigure}{.3\linewidth}
+    \includegraphics[width=\linewidth]{"report/eades/k9".pdf}
+    \end{subfigure}
+    \begin{subfigure}{.3\linewidth}
+    \includegraphics[width=\linewidth]{"report/eades/k13".pdf}
+    \end{subfigure}
+
+    \caption{The graphs $K_4, K_5, K_6, K_7, K_9$ and $K_{13}$ as drawn by Eades' spring algorithm}
+\end{figure}
+
+\section{Barycenter Method Gallery}
+\subsection{Petersen Graph}
 \begin{figure}[H]
     \centering
     \includegraphics[width=.5\linewidth]{"report/petersen".pdf}
@@ -1129,6 +1161,138 @@ with
     -51.49 \\
     \end{bmatrix} 
 \]
+
+\pagebreak
+
+\subsection{D{\"u}rer Graph (GP(6, 2))}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.5\linewidth]{"report/barycenter/durer".pdf}
+\end{figure}
+
+This graph has Laplacian
+\[
+M = \begin{bmatrix}
+3 & 0 & -1 & 0 & -1 & 0 \\
+0 & 3 & 0 & -1 & 0 & -1 \\
+-1 & 0 & 3 & 0 & -1 & 0 \\
+0 & -1 & 0 & 3 & 0 & -1 \\
+-1 & 0 & -1 & 0 & 3 & 0 \\
+0 & -1 & 0 & -1 & 0 & 3 \\
+\end{bmatrix}
+\]
+
+The coordinates of the free vertices are governed by 
+\[
+M\begin{bmatrix}
+x_1 \\
+x_2 \\
+x_3 \\
+x_4 \\
+x_5 \\
+x_6 \\
+\end{bmatrix}
+=\begin{bmatrix}
+250 \\
+125 \\
+-125 \\
+-250 \\
+-125 \\
+125 \\
+\end{bmatrix},
+M \begin{bmatrix}
+y_1 \\
+y_2 \\
+y_3 \\
+y_4 \\
+y_5 \\
+y_6 \\
+\end{bmatrix}
+=\begin{bmatrix}
+0 \\
+217 \\
+217 \\
+0 \\
+-217 \\
+-217 \\
+\end{bmatrix}
+\]
+with solutions
+\[
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+x_3 \\
+x_4 \\
+x_5 \\
+x_6 \\
+\end{bmatrix}
+=\begin{bmatrix}
+62.5 \\
+31.2 \\
+-31.3 \\
+-62.5 \\
+-31.3 \\
+31.2 \\
+\end{bmatrix},
+\begin{bmatrix}
+y_1 \\
+y_2 \\
+y_3 \\
+y_4 \\
+y_5 \\
+y_6 \\
+\end{bmatrix}
+=\begin{bmatrix}
+0 \\
+54.1 \\
+54.1 \\
+0 \\
+-54.1 \\
+-54.1 \\
+\end{bmatrix}
+\]
+
+\pagebreak
+
+\subsection{M{\"o}bius-Kantor Graph (GP(8, 3))}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.5\linewidth]{"report/barycenter/mobius_kantor".pdf}
+\end{figure}
+
+\subsection{Dodecahedral Graph (GP(10, 2))}
+This graph can be thought of the skeleton of the dodecahedron.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.5\linewidth]{"report/barycenter/dodecahedral".pdf}
+\end{figure}
+
+\pagebreak
+
+\subsection{Desargues Graph (GP(10, 3))}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{"report/barycenter/desargues".pdf}
+\end{figure}
+
+\pagebreak
+\subsection{Nauru Graph (GP(12, 5))}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{"report/barycenter/nauru".pdf}
+\end{figure}
+
+\pagebreak
+
+\subsection{Cubic Symmetric Graph $F_{048} A$ (GP(25, 4))}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{"report/barycenter/cubic_symmetric_f048_a".pdf}
+\end{figure}
 
 \printbibliography
 

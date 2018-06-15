@@ -168,6 +168,35 @@
       \verb https://www.gnu.org/software/glpk/
       \endverb
     \endentry
+    \entry{reingold1981tidier}{article}{}
+      \name{author}{2}{}{%
+        {{hash=0ed93571b252e1ce226d43df1a6f938c}{%
+           family={Reingold},
+           family_i={R\bibinitperiod},
+           given={Edward\bibnamedelima M.},
+           given_i={E\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=46a59f6c97946db78de8558f449bd5a8}{%
+           family={Tilford},
+           family_i={T\bibinitperiod},
+           given={John\bibnamedelima S.},
+           given_i={J\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{d1ad7b64ab694e6d3df5f68a2041585f}
+      \strng{fullhash}{d1ad7b64ab694e6d3df5f68a2041585f}
+      \field{sortinit}{R}
+      \field{sortinithash}{c7387613477035a752d935acfc3e3ea2}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{IEEE Transactions on software Engineering}
+      \field{number}{2}
+      \field{title}{Tidier drawings of trees}
+      \field{year}{1981}
+      \field{pages}{223\bibrangedash 228}
+      \range{pages}{6}
+    \endentry
     \entry{supowit1983complexity}{article}{}
       \name{author}{2}{}{%
         {{hash=4d09d23dec657f154fde48f666133213}{%
@@ -222,6 +251,53 @@
       \field{year}{1963}
       \field{pages}{743\bibrangedash 767}
       \range{pages}{25}
+    \endentry
+    \entry{watkins1969theorem}{article}{}
+      \name{author}{1}{}{%
+        {{hash=48385a165f8633ecf69753bdc6f0be91}{%
+           family={Watkins},
+           family_i={W\bibinitperiod},
+           given={Mark\bibnamedelima E},
+           given_i={M\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier}%
+      }
+      \strng{namehash}{48385a165f8633ecf69753bdc6f0be91}
+      \strng{fullhash}{48385a165f8633ecf69753bdc6f0be91}
+      \field{sortinit}{W}
+      \field{sortinithash}{99e3ba1b3f78bb6f073e7fa7ac11636b}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Combinatorial Theory}
+      \field{number}{2}
+      \field{title}{A theorem on Tait colorings with an application to the generalized Petersen graphs}
+      \field{volume}{6}
+      \field{year}{1969}
+      \field{pages}{152\bibrangedash 164}
+      \range{pages}{13}
+    \endentry
+    \entry{nauru}{online}{}
+      \name{author}{1}{}{%
+        {{hash=5d54d442adc2a0d430f0728fd6530577}{%
+           family={Weisstein},
+           family_i={W\bibinitperiod},
+           given={Eric\bibnamedelima W.},
+           given_i={E\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+      }
+      \strng{namehash}{5d54d442adc2a0d430f0728fd6530577}
+      \strng{fullhash}{5d54d442adc2a0d430f0728fd6530577}
+      \field{sortinit}{W}
+      \field{sortinithash}{99e3ba1b3f78bb6f073e7fa7ac11636b}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Nauru Graph}
+      \field{urlday}{15}
+      \field{urlmonth}{06}
+      \field{urlyear}{2018}
+      \verb{url}
+      \verb http://mathworld.wolfram.com/NauruGraph.html
+      \endverb
     \endentry
   \endsortlist
 \endrefsection

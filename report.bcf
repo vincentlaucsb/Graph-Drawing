@@ -2097,13 +2097,18 @@
   </bcf:bibdata>
   <bcf:section number="0">
     <bcf:citekey order="1">Battista:1998:GDA:551884</bcf:citekey>
-    <bcf:citekey order="2">supowit1983complexity</bcf:citekey>
+    <bcf:citekey order="2">reingold1981tidier</bcf:citekey>
     <bcf:citekey order="3">supowit1983complexity</bcf:citekey>
-    <bcf:citekey order="4">glpk</bcf:citekey>
-    <bcf:citekey order="5">Knott:1977:NSB:359423.359434</bcf:citekey>
-    <bcf:citekey order="6">eades1984heuristic</bcf:citekey>
-    <bcf:citekey order="7">tutte1963draw</bcf:citekey>
-    <bcf:citekey order="8">eigen</bcf:citekey>
+    <bcf:citekey order="4">supowit1983complexity</bcf:citekey>
+    <bcf:citekey order="5">glpk</bcf:citekey>
+    <bcf:citekey order="6">Knott:1977:NSB:359423.359434</bcf:citekey>
+    <bcf:citekey order="7">eades1984heuristic</bcf:citekey>
+    <bcf:citekey order="8">eades1984heuristic</bcf:citekey>
+    <bcf:citekey order="9">tutte1963draw</bcf:citekey>
+    <bcf:citekey order="10">eigen</bcf:citekey>
+    <bcf:citekey order="11">watkins1969theorem</bcf:citekey>
+    <bcf:citekey order="12">watkins1969theorem</bcf:citekey>
+    <bcf:citekey order="13">nauru</bcf:citekey>
   </bcf:section>
   <bcf:sortlist section="0" name="nty/global/" type="entry" sortscheme="nty" sortnamekeyscheme="global" labelprefix="">
   <bcf:sorting>

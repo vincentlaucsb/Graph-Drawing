@@ -1,5 +1,6 @@
 \documentclass[11pt]{report}
 \usepackage[margin=1.25in]{geometry}
+\usepackage{boondox-cal} % Formal scripts
 \usepackage{graphicx,float}
 
 %Biblatex
@@ -30,14 +31,40 @@
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{corollary}{Corollary}[section]
 
-%opening
-\title{Graph Drawing Algorithms}
-\author{Vincent La}
-
 \begin{document}
+\begin{titlepage}
+    \centering
+    {\scshape\LARGE University of California, Santa Barbara \par}
+    \vspace{1cm}
+    {\scshape\Large Senior Thesis\par}
+    \vspace{1.5cm}
+    {\huge{\bfseries Dots and Lines} \\
+        {\LARGE A Survey of Graph Drawing Algorithms} \par}
+    \vspace{2cm}
+    {\Large\itshape Vincent La\par}
+    \vfill
+    supervised by\par
+    Karel Casteels
     
-\maketitle
+    \vfill
+    
+    % Bottom of the page
+    {\large \today\par}
+\end{titlepage}
+    
 \tableofcontents
+
+\pagebreak
+
+\section*{Acknowledgements}
+
+I would like to thank Karel Casteels for his support and guidance, as well as his excellent introduction to graph theory class provided the original spark for writing this paper. Furthermore, while I am shocked that in the year 2018 it is still possible for a widely cited computer science paper (1829 citations on Google Scholar as of the time of this writing) to only be available in book format, I would like to thank the staff of the UCSB library for helping me track down a 1984 copy of \textit{Congressus Numerantium} containing Peter Eades' ``A Heuristic for Graph Drawing''.
+
+\bigskip
+
+Lastly, I would like to acknowledge the 2017-2018 Golden State Warriors whose commitment to excellence inspired me to see this paper to its completion.
+
+\pagebreak
 
 \chapter{Introduction}
 Graph theory is one of the most widely applicable fields of math, and as such there has been a large demand for different methods of visualizing graphs. Just as the types and uses of graphs are wide and varied, there are also a variety of different algorithms for visualizing graphs. These algorithms vary in the type of graphs they will draw, and the guarantees they may provide, e.g. planarity and symmetry. This paper will further explore some of the algorithms detailed by \textit{Graph Drawing: Algorithms for the Visualization of Graphs}. \cite[see][page 12]{Battista:1998:GDA:551884}
@@ -270,7 +297,14 @@ The figures below show the displacements set by the algorithm for each node. Fro
 
 \section{Tree Drawing as a Linear Program -- Supowit and Reingold (1983)}
 \subsection{The Problem of Narrow Trees}
-Unfortunately, as shown earlier (note to self: show earlier), locally minimizing the width of every subtree does not achieve the goal of a minimum width drawing. Sometimes in order to draw a tree as narrow as possible, some subtrees have to be drawn non-optimally.
+Reingold and Tilford (1981)~\cite{reingold1981tidier} gave a linear time algorithm for drawing binary trees satisfying the six aesthetics described below, while also trying to keep each subtree as compact as possible. However, it was soon discovered that locally minimizing the width of every subtree does not achieve the goal of a minimum width drawing overall. As shown in Figure \ref{fig:rt81_suboptimal}, sometimes in order to draw a tree as narrow as possible, some subtrees have to be drawn non-optimally.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics{"report/rt81_suboptimal".png}
+    \caption{A figure from Supowit and Reingold displaying a case of suboptimality from RT81. Although the subtrees $T_1$ and $T_2$ are drawn compactly in (a) by RT81, (b) shows that a narrower drawing overall is possible if $T_1$ and $T_2$ are allowed to be farther apart. }
+    \label{fig:rt81_suboptimal}
+\end{figure}
 
 \subsection{Aesthetic Trees}
 
@@ -446,7 +480,7 @@ In this paper, this algorithm was implemented as a C++ program based around the 
 
 Then, aesthetics 1-5 could be computed using $2n$ iterations. First, an iterative level-order traversal was used to simultaneously assign IDs to each node, determine the number of left and right sons, and thus, determine the total number of rows and columns in the constraint matrix. By using an iterative method, our traversal took linear as opposed to quadratic time. During the level-order traversal, a hash table mapping each level of the tree to an array of node pointers was populated.
 \footnote{Implemented in C++ as \lstinline{std::unordered_map<int, TreeNode*>}}
-Then, a final iteration over this auxiliary data structure was used to calculate the aesthetics. (Write about how paper uses a different method).
+Then, a final iteration over this auxiliary data structure was used to calculate the aesthetics.
 
 \bigskip
 
@@ -527,7 +561,6 @@ Thus, calculating the first five aesthetics can be done in linear time by iterat
 As mentioned by the paper's authors, there is some debate about whether or not this should be considered an aesthetic. However, sometimes visualizations are used to find recurring patterns, and enforcing this aesthetic allows humans to more effectively use their pattern recognition abilities. In Figure \ref{fig:aes6_on_off}, the same tree is drawn twice by this algorithm, where aesthetic 6 is relaxed in the first drawing.
 
 \begin{figure}[H]
-    \label{fig:aes6_on_off}
     \begin{subfigure}{\linewidth}
         \centering
         \includegraphics[width=\linewidth]{"report/no_aes6_20".pdf}
@@ -540,6 +573,8 @@ As mentioned by the paper's authors, there is some debate about whether or not t
     \caption{An isomorphic tree as drawn by this algorithm satisfying aesthetics 1-6}
     \end{subfigure}
     \caption{Two drawings of isomorphic trees differing only in the application of aesthetic 6}
+    
+    \label{fig:aes6_on_off}
 \end{figure}
 
 \subsubsection{Rank of a Tree}
@@ -576,53 +611,107 @@ In the algorithm above, the $rank()$ of a tree is computed recursively, moving f
 
 \chapter{Force Directed Algorithms}
 \section{Introduction}
-Force directed algorithms attempt to draw graphs by relating them to some physical analogy. For example, we may view vertices as steel balls and the edges between them as springs. One of the earlier force directed algorithms, Tutte's Barycenter Algorithm, attempts to place a graph's nodes along it's "center of mass."
+Force directed algorithms attempt to draw graphs by relating them to some physical analogy. For example, we may view vertices as steel balls and the edges between them as springs. One of the earlier force directed algorithms, Tutte's Barycenter Algorithm, attempts to place a graph's nodes along its ``center of mass.''
 
-\subsection{Notation}
-Although there are plenty of force-directed algorithms, they all have the final result of mapping the vertices of a graph to $\mathbb{R}^2$. Hence, we saw that each vertex $v$ in a graph gets mapped to some point $p_v = (x_v, y_v)$. 
+\subsection{Definitions and Notation}
+Although there are plenty of force-directed algorithms, they all have the final result of mapping the vertices of a graph to $\mathbb{R}^2$. Hence, for the rest of the chapter we will use the shorthand $p_v = (x_v, y_v)$. 
+
+\bigskip
+
+Furthermore, force-directed algorithms may simply be viewed as setting up mathematical models which can then be solved iteratively. Using various numerical methods, such as a Newton-Raphson iteration, the positions of the vertices are iterated upon until they converge. However, this implies we need to define convergence in a way dumb enough for a computer to understand.
+
+\begin{defn}[Convergence]
+    Suppose we are applying some force-directed algorithm $f$ to a graph with vertex set $V$. For any $v \in V$, let $p_{i - 1}, p$ be the mapping of $v$ to $\mathbb{R}^2$ during the $i - 1$ and $i^{th}$ iteration of $f$ respectively. We say that $f$ has converged if for all $v \in V$, $\abs{p - p_{i - 1}} < \epsilon$, where $\epsilon > 0$ is some small number. (In practice, we can define $\epsilon$ to be a very small positive number like $0.01$).
+\end{defn}
 
 \section{Eades' Spring System}
-In this algorithm, edges are modeled as springs while vertices are viewed as electrical forces which repel each other.~\cite{eades1984heuristic} Formally, the force on each vertex $v$ is 
-\[
+\subsection{Motivation: A Heuristic Method}
+Drawing graphs poses many difficulties, such as disagreement over what makes a drawing ``aesthetic,'' and the difficulty of finding and the displaying the various isomorphisms of a graph. Furthermore, while the authors of this method desired drawings where all edges were about equally long, others have discovered satisfying that aesthetic to be NP-hard. Because of the many difficulties of drawing graphs, the authors sought to define a heuristic method.
+
+\subsection{The Model}
+In this algorithm, edges are modeled as springs while vertices are replaced by steel rings, thus creating the analogy between graphs and physical systems. Furthermore, vertices are also given an electrical force so they repel each other.~\cite{eades1984heuristic} Formally, the force on each vertex $v$ is
+\begin{equation}\label{eq:eades_formula}
     F(v) = \sum_{(u, v) \in E} f_{uv} + \sum_{(u, v) \in V \times V} g_{uv}
-\]
+\end{equation}
 
-If we use Hooke's law springs and electrical forces which follow an inverse square law, we can write this as
+where $f$ is the force of a spring acting between adjacent vertices and $g$ is the electrical force acting between all pairs of vertices. If we use Hooke's law springs and electrical forces which follow an inverse square law, we can write this as
+
+\begin{equation}
+    \sum_{(u, v) \in E} \mathcal{k}_{uv}^{(1)} ( d(p_u, p_v) - \mathcal{l}_{uv} ) \frac{x_v - x_u}{d(p_u, p_v)} +
+    \sum_{(u, v) \in V \times V} \frac{\mathcal{k}_{uv}^{(2)}}{( d(p_u, p_v) )^2 }  \frac{x_v - x_u}{d(p_u, p_v)}
+\end{equation}
+
+where $d(p_u, p_v)$ is the Euclidean distance between $p_u$ and $p_v$ and
+\begin{itemize}
+    \item $\mathcal{k}_{uv}^{(1)}$ determines the stiffness of springs
+    \item $\mathcal{k}_{uv}^{(2)}$ determines the strength of the electrical field between vertices
+    \item $\mathcal{l}_{uv}$ gives the length of a spring under zero tension
+\end{itemize}
+
+All of the spring drawings in this paper were drawn with $\mathcal{k}_{uv}^{(1)} = 400$, $\mathcal{k}_{uv}^{(2)} = 2$, and $\mathcal{l}_{uv} = 1$.
+
+\subsection{Alternative Formulation with Logarithmic Springs}
+In Eades' 1984 paper, he uses logarithmic springs because ``experience shows that Hookes Law (linear) springs are too strong when the vertices are far apart.''~\cite{eades1984heuristic} Under this formulation, we can rewrite the x-component of \ref{eq:eades_formula} as
 
 \[
-    \sum_{(u, v) \in E} k_{uv}^{(1)} ( d(p_u, p_v) - l_{uv} ) \frac{x_v - x_u}{d(p_u, p_v)} +
-    \sum_{(u, v) \in V \times V} \frac{k_{uv}^{(2)}}{( d(p_u, p_v) )^2 }  \frac{x_v - x_u}{d(p_u, p_v)}
+    \mathcal{k}_{uv}^{(1)} \log{\left(
+        \frac{d(p_u, p_v)}{\mathcal{l}_{uv}}
+        \right)}
+    \frac{x_v - x_u}{d(p_u, p_v)}
 \]
+
+However, a passage in the later \textit{Graph Drawing: Algorithms for the Visualization of Graphs} (which Eades co-authored) asserts ``experience has shown that it is difficult to justify the extra computational effort by the quality of the resulting drawings'' in regards to logarithmic springs.
 
 \subsection{Algorithm}
-A very simple algorithm for finding the system's equilibrium is to move each vertex in the direction of the force in a small proportion to the magnitude of the force. An example of this algorithm at work drawing $K_8$ is shown below
+A very simple algorithm for finding the system's equilibrium is to move each vertex in the direction of the force in a small proportion to the magnitude of the force.
+
+\begin{algorithm}[H]
+    \caption{Eades' Heuristic for Graph Drawing}
+    \begin{algorithmic}[1]
+        % Begin Describing Algorithm
+        \Procedure{layout}{$G$}
+        \While{algorithm has not converged}
+        \For{each vertex $v$}
+            \State{Compute the force $f$ on $v$}
+            \State{Move $v$ in the direction of $f$ by a small proportion to the magnitude of $f$}
+        \EndFor
+        \EndWhile
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+In this paper, the ``small proportion'' used was 10\%, just as it was in Eades' 1984 paper. Furthermore, the original paper also uses a fixed number of iterations (100) instead of checking for convergence, since it was observed that most graphs obtain equilibrium within 100 iterations.
+
+\subsubsection{Algorithm Trace for $K_8$}
+The algorithm described above, while not the most efficient, allows us to create animations of the vertices moving into place.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{"report/k8_trace".pdf}
-    \caption{The complete graph $K_8$}
+    \caption{The complete graph $K_8$ drawn by Eades' algorithm}
 \end{figure}
+
+\subsection{Observations}
+The author notes that this algorithm tends . Furthermore, this algorithm tends to do poorly with dense graphs, with one ironic exception--the complete graph $K_n$ (when $n$ is small).
+
+\subsubsection{Sensitivity to Initial Positions}
+As mentioned earlier, this algorithm is a heuristic, and the final drawing is heavily influenced by the initial positioning of the vertices as shown by Figure \ref{fig:eades_sensitivity} below.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{"report/tesseract".pdf}
-    \caption{The tesseract $Q_4$}
-\end{figure}
-
-\subsection{Sensitivity to Initial Positions}
-As notice, this algorithm is best described as a "heuristic."   
-
-\begin{figure}[H]
-    \begin{subfigure}{.5\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{"report/cube_random".pdf}
+    \begin{subfigure}{.45\linewidth}
+        \includegraphics[width=\linewidth]{"report/cube_random".pdf}
+        \caption{Vertices are initially positioned uniformly at random about the canvas}
     \end{subfigure}
-    \begin{subfigure}{.5\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{"report/cube".pdf}
+    \begin{subfigure}{.45\linewidth}
+        \includegraphics[width=\linewidth]{"report/cube".pdf}
+        \caption{Vertices are initially positioned somewhat close to where they would be in a standard drawing of the cube}
     \end{subfigure}
     \caption{Two drawings of the cube $Q_3$}
+    \label{fig:eades_sensitivity}
 \end{figure}
+
+In the 1984 paper, Eades mentions his heuristic may be used as an approximation to a final layout, and that drawings may be fine-tuned with an accompanying editor. The figure above supports this practice, as it shows that while this algorithm may not be capable of producing aesthetic layouts on its own, it can do a great job with just a little human intervention.
 
 \section{Tutte's Barycenter Method}
 An early force directed drawing method was Tutte's Barycenter Method.~\cite{tutte1963draw} In this method, the force on every vertex $v$ is given by 
@@ -724,11 +813,7 @@ The solution to this matrix is given by $x_1 = x_3 = 0, x_2 = \frac{250}{3}, x_4
 
 \subsection{Algorithms}
 \subsubsection{Newton-Raphson Iteration}
-The below Newton-Raphson Iteration is easy to code and is reasonably fast. However, it is not as fast as solving Algorithm \ref{barycenter_la} below with a linear algebra package. The idea behind the algorithm is that we simply keep iterating until the $x, y$ values of each vertex converges. However, this implies we need to define convergence in a way dumb enough for a computer to understand.
-
-\begin{defn}[Convergence]
-    Let $p_{i - 1}, p$ be the placement of some vertex $v$ during the $i - 1$ and $i^{th}$ iteration of the Newton-Raphson Iteration. We say that $p$ has converged if $\abs{p - p_{i - 1}} < \epsilon$. (In practice, we can define $\epsilon$ to be a very small positive number like $0.01$).
-\end{defn}
+The below Newton-Raphson Iteration is easy to code and is reasonably fast. However, it is not as fast as solving Algorithm \ref{barycenter_la} below with a linear algebra package. The idea behind the algorithm is that we simply keep iterating until the $x, y$ values of each vertex converges.
 
 \begin{algorithm}[H]
     \caption{Barycenter Layout (Newton-Raphson)}
@@ -987,7 +1072,7 @@ One the the main drawbacks of this algorithm is potentially poor resolution, i.e
     For every fixed vertex $u$ in the prism graph $\Pi_{n}$, the distance between it and its adjacent free vertex $v$ tends to 0 as $n$ becomes large.
 
     \begin{proof}
-        From the theorem above, we know that
+        Without loss of generality, assume that this graph is drawn in the unit square. From the theorem above, we know that
         \[ v = u \cdot \frac{1}{3 -2\cos{\frac{2\pi}{n}}} \]
         
         Hence,
@@ -1073,8 +1158,24 @@ One the the main drawbacks of this algorithm is potentially poor resolution, i.e
     \caption{The graphs $K_4, K_5, K_6, K_7, K_9$ and $K_{13}$ as drawn by Eades' spring algorithm}
 \end{figure}
 
-\section{Barycenter Method Gallery}
-\subsection{Petersen Graph}
+\subsection{Tesseract $Q_4$}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{"report/tesseract".pdf}
+\end{figure}
+
+\section{Barycenter Method: Generalized Petersen Graphs}
+One can extend the notion of a Petersen graph to a family of graphs formed by taking the vertices of a $n-$cycle and connecting to them to the corresponding vertices of a star polygon. Tutte's barycenter method described above draws this family of graphs very well. Watkins~\cite{watkins1969theorem} gives a simple description of a Generalized Petersen graph $GP(n, k)$ as a graph with
+\[\begin{aligned}
+V(GP(n, k)) &= \{ u_0, u_1, ..., u_{n - 1}, v_0, v_1, ..., v_{n - 1} \} \\
+E(GP(n ,k)) &= \{ [u_i, u_{i+1}], [u_i, v_i], [v_i, v_{i+k}] \}
+\end{aligned}\]
+
+for $i = 0, ..., n - 1$ and $k \leq n - 1, 2k \neq n$. Note that the subscripts for the edge set should be read modulo $n$. Using this definition, the Petersen graph can be described as $GP(5, 2)$.
+
+\pagebreak
+
+\subsection{Petersen Graph (GP(5, 2))}
 \begin{figure}[H]
     \centering
     \includegraphics[width=.5\linewidth]{"report/petersen".pdf}
@@ -1082,31 +1183,31 @@ One the the main drawbacks of this algorithm is potentially poor resolution, i.e
 
 In this image above, the x-coordinates are governed by
 \[
-    \begin{bmatrix}
-        3  & 0  & -1 & -1 &  0 \\
-        0  & 3  &  0 & -1 & -1 \\
-        -1 & 0  &  3 & 0 & -1 \\
-        -1 & -1 &  0 & 3 & 0 \\
-        0  & -1 & -1 & 0 & 3 \\
-    \end{bmatrix}
-    \begin{bmatrix}
-        x_1 \\
-        x_2 \\
-        x_3 \\
-        x_4 \\
-        x_5 \\
-    \end{bmatrix}  =
-    \begin{bmatrix}
-        250 \\
-        77.25 \\
-        -202.25 \\
-        -202.25 \\ 
-        77.25 \\
-    \end{bmatrix}
+\begin{bmatrix}
+3  & 0  & -1 & -1 &  0 \\
+0  & 3  &  0 & -1 & -1 \\
+-1 & 0  &  3 & 0 & -1 \\
+-1 & -1 &  0 & 3 & 0 \\
+0  & -1 & -1 & 0 & 3 \\
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+x_3 \\
+x_4 \\
+x_5 \\
+\end{bmatrix}  =
+\begin{bmatrix}
+250 \\
+77.25 \\
+-202.25 \\
+-202.25 \\ 
+77.25 \\
+\end{bmatrix}
 \]
 and the y-coordinates are governed by
 \[
-    \begin{bmatrix}
+\begin{bmatrix}
 3  & 0  & -1 & -1 &  0 \\
 0  & 3  &  0 & -1 & -1 \\
 -1 & 0  &  3 & 0 & -1 \\
@@ -1120,7 +1221,7 @@ y_3 \\
 y_4 \\
 y_5 \\
 \end{bmatrix}  =
-    \begin{bmatrix}
+\begin{bmatrix}
 0 \\
 237.76 \\
 146.95 \\
@@ -1131,38 +1232,38 @@ y_5 \\
 
 with
 \[
-    \begin{bmatrix}
-    x_1 \\
-    x_2 \\
-    x_3 \\
-    x_4 \\
-    x_5 \\
-    \end{bmatrix} 
-    =
-    \begin{bmatrix}
-        54.14 \\
-        16.73 \\
-        -43.8 \\
-        -43.8 \\
-        16.73 \\
-    \end{bmatrix},
-        \begin{bmatrix}
-    y_1 \\
-    y_2 \\
-    y_3 \\
-    y_4 \\
-    y_5 \\
-    \end{bmatrix}  =
-    \begin{bmatrix}
-    -0 \\
-    51.49 \\
-    31.82 \\
-    -31.82 \\
-    -51.49 \\
-    \end{bmatrix} 
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+x_3 \\
+x_4 \\
+x_5 \\
+\end{bmatrix} 
+=
+\begin{bmatrix}
+54.14 \\
+16.73 \\
+-43.8 \\
+-43.8 \\
+16.73 \\
+\end{bmatrix},
+\begin{bmatrix}
+y_1 \\
+y_2 \\
+y_3 \\
+y_4 \\
+y_5 \\
+\end{bmatrix}  =
+\begin{bmatrix}
+-0 \\
+51.49 \\
+31.82 \\
+-31.82 \\
+-51.49 \\
+\end{bmatrix} 
 \]
 
-\pagebreak
+Watkins showed that the Petersen graph is the only member of the Generalized Petersen family of graphs to not have a 3-edge-coloring.~\cite{watkins1969theorem}
 
 \subsection{D{\"u}rer Graph (GP(6, 2))}
 \begin{figure}[H]
@@ -1280,6 +1381,8 @@ This graph can be thought of the skeleton of the dodecahedron.
 
 \pagebreak
 \subsection{Nauru Graph (GP(12, 5))}
+The inner star polygon of this graph resembles the star on the flag of the Pacific island of Nauru, hence the name.~\cite{nauru}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{"report/barycenter/nauru".pdf}

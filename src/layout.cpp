@@ -44,6 +44,7 @@ namespace force_directed {
     }
 
     std::vector<SVG::SVG> eades84(TUNGraph& graph, VertexPos& pos) {
+        /** An attempt to implement Eades' algorithm as described in his 1984 paper */
         AdjacencyList adj = adjacency_list(graph), not_adj;
         std::vector<SVG::SVG> ret;
 

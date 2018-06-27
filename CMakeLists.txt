@@ -69,9 +69,6 @@ add_library(csv_parser
 target_include_directories(csv_parser PUBLIC CSV_DIR)
 
 ## executables
-add_executable(eades84 src/eades84.cpp)
-target_link_libraries(eades84 snap force_directed)
-
 add_executable(animate_spring src/animate_spring.cpp)
 target_link_libraries(animate_spring snap force_directed csv_parser)
 
@@ -79,9 +76,5 @@ add_executable(animate_tutte src/animate_barycenter.cpp)
 target_link_libraries(animate_tutte snap force_directed)
 
 ## tree executables
-add_executable(tree_draw src/tree.cpp src/tree_draw.cpp src/tree_main.cpp)
-add_executable(tree_paper src/tree.cpp src/tree_paper.cpp src/tree_draw.cpp)
-
-## tree_lp
 add_executable(tree_lp src/tree_lp.cpp)
 target_link_libraries(tree_lp glpk)

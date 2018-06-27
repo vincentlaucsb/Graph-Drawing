@@ -5,7 +5,7 @@ This repository contains the report and code for my senior thesis paper on graph
  * For some cool animations of force directed algorithms at work, [click here](https://github.com/vincentlaucsb/Graph-Drawing/tree/master/animations)
  * For the C++ code behind these images, [click here](https://github.com/vincentlaucsb/Graph-Drawing/tree/master/src)
  
- And of course, for my original inspiration 
+ And of course, for my original inspiration [read this book](https://www.amazon.com/Graph-Drawing-Algorithms-Visualization-Graphs/dp/0133016153).
  
 ## C++ Information
 This project was built as a series of C++11 programs pusing Microsoft Visual Studio v15.6.4 on Windows 10 using CMake. There are three main programs:
